@@ -1,11 +1,11 @@
 # STATUS.md — terminal-list 当前状态
 
 > 唯一当前态。更新进度 / 下一动作 / 阻塞时只改本文件，不在多处重复维护。
-> 更新日期：2026-09-05
+> 更新日期：2026-09-08
 
 ## 当前主线
 
-个人终端工具箱已成型且全部推到 GitHub：主搜索 `pycheat`（离线 + ollama 融合语义）、跨域套件 `tk`（7 域）、跨平台（macOS / Windows）。最新提交 `9ab0cd4` 刚完成 Windows 支持。随后用户决定「换人接手」，故建立本仓库**自包含中枢**（`AGENTS.md` / `STATUS.md` / `MEMORY.md`，取代此前指向私人 iCloud 的软链），以便交接。
+个人终端工具箱已成型且全部推到 GitHub：主搜索 `pycheat`（离线 + ollama 融合语义）、跨域套件 `tk`（7 域）、跨平台（macOS / Windows）。最新提交 `9ab0cd4` 刚完成 Windows 支持。随后用户决定「换人接手」，故建立本仓库**自包含中枢**（`AGENTS.md` / `STATUS.md` / `MEMORY.md`，取代此前指向私人 iCloud 的软链），以便交接。2026-09-08 将工作区剩余未跟踪内容（OS 第四卷环境变量分裂设计稿、芯片架构内功深潜目录）全量提交推送，远程 `main` 现为 `e2b421c`，**工作区与 GitHub 完全对齐**——接手人 `git clone` 即获完整中枢，可直接接手。
 
 ## 已完成（按提交线）
 
@@ -20,10 +20,11 @@
 9. `tk` 跨域套件（`tkcore` 引擎 + 7 域：note / log / gitx / clip / todo / explain / sum）
 10. 跨平台支持（`.cmd` 入口 + `install.ps1` + 首次自动初始化 cheatsheet）
 11. **本批：建立仓库自包含中枢（换人接手用）**
+12. **本批：全量同步 GitHub**——提交 OS 第四卷环境变量分裂设计稿 + 芯片架构内功深潜目录（6 动画 + 2 md），远程 `main` 现为 `e2b421c`，工作区与 GitHub 完全对齐。
 
 ## 当前状态
 
-- 最新提交：`9ab0cd4`（跨平台）
+- 最新提交：`e2b421c`（全量同步中枢到 GitHub）
 - 工具箱功能：全可用（mac / win）。`explain` / `sum` 需本机有 **chat 模型**才可用（`bge-m3` / `nomic-embed-text` 不能对话）。
 - 已实测验证：`note` / `todo` / `gitx` / `clip` / `log` 语义召回（含「连接被拒绝」→ 英文 `connection refused` 段 的**跨语言捞针**）；`explain` / `sum` 缺 chat 模型时友好降级。
 - 中枢：本仓库现含 `AGENTS.md` / `STATUS.md` / `MEMORY.md`（自包含，已纳入 git）；旧的 iCloud 软链移为 `.icloud.bak` 且不提交。
@@ -43,7 +44,7 @@
 ## 接手人第一步
 
 1. `git clone` 仓库（或拷贝 `terminal-toolbox/`）。
-2. 读 `AGENTS.md` → 本文件 → `MEMORY.md` → 最近日记 `2026-09-05.md`。
+2. 读 `AGENTS.md` → 本文件 → `MEMORY.md` →（日记在 `.workbuddy/memory/`，属本机私有记忆，clone 后无日记属正常；接手以本文件 + MEMORY 为准）。
 3. 装 Python（3.9+，勾 Add to PATH）。
 4. （可选）装 ollama + `ollama pull bge-m3` 开语义检索。
 5. **macOS**：把 `pycheat` / `tk` 软链到 `~/bin`。**Windows**：PowerShell 跑 `install.ps1` 后重开终端，用 `c` / `tk`。
