@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>多核怎么不打架 · MESI 缓存一致性动画</title>
+<style>
+  :root{
+    --bg:#0d1117; --panel:#161b22; --panel2:#11161d; --border:#30363d;
+    --text:#e6edf3; --muted:#8b949e; --blue:#378add; --amber:#d29922;
+    --red:#f85149; --green:#3fb950; --gray:#484f58;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--text);
+    font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;padding:24px;}
+  h1{font-size:20px;font-weight:600;margin:0 0 4px;}
+  .sub{color:var(--muted);font-size:13px;margin-bottom:18px;line-height:1.6;}
+  .panel{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:16px;}
+  .cores{display:flex;gap:16px;flex-wrap:wrap;}
+  .core{flex:1;min-width:240px;background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:14px;}
+  .core h3{margin:0 0 10px;font-size:14px;}
+  .badge{font-size:42px;font-weight:700;text-align:center;padding:18px;border-radius:10px;margin:8px 0;letter-spacing:2px;}
+  .s-M{background:rgba(248,81,73,.20);color:#ff9a94;}
+  .s-E{background:rgba(63,185,80,.20);color:#7ee787;}
+  .s-S{background:rgba(55,138,221,.20);color:#9ecbff;}
+  .s-I{background:var(--gray);color:#c9d1d9;}
+  .btns{display:flex;gap:8px;margin-top:8px;}
+  button{font-size:13px;padding:8px 12px;border-radius:8px;border:1px solid var(--border);
+    background:var(--panel);color:var(--text);cursor:pointer;flex:1;}
+  button:hover{border-color:var(--blue);}
+  .bus{margin-top:14px;}
+  .bus h3{font-size:14px;margin:0 0 8px;}
+  .log{background:#000;color:#9ecbff;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;
+    padding:12px;border-radius:8px;height:200px;overflow:auto;white-space:pre-wrap;line-height:1.5;}
+  .topctl{display:flex;gap:10px;align-items:center;margin-bottom:4px;}
+  .legend{display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin-top:8px;}
+  .legend i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:5px;vertical-align:-1px;}
+  .note{font-size:12.5px;color:var(--muted);line-height:1.6;margin-top:10px;}
+  code{background:var(--panel2);padding:1px 5px;border-radius:4px;color:#9ecbff;}
+</style>
+</head>
+<body>
+<h1>多核怎么不打架 · MESI 缓存一致性动画</h1>
+<div class="sub">
+  打个比方：两颗核是<b>两个同事</b>，内存里那个变量 X 是<b>一份共享文件</b>。
+  每人手边有个缓存「草稿本」，记着 X 的副本。四种状态就是草稿本的「红绿灯」：
+  <br>🟥 <b>M</b> 我改过了（只有我有，是脏草稿，别人那份作废）&nbsp; 🟩 <b>E</b> 只有我有且没改（干净）&nbsp;
+  🟦 <b>S</b> 好几个人都有（都干净，谁也别偷偷改）&nbsp; ⚪ <b>I</b> 我的作废了，得重新去拿。
+  <br>点两个核的「读一下 / 改一下」，看它们怎么通过<b>总线喊话</b>协调——这就是多核不互相踩数据的硬件机制。对应文档 §4。
+</div>
+
+<div class="panel">
+  <div class="topctl">
+    <button id="reset" style="flex:0 0 auto;padding:8px 16px;">🔄 重新来过（都清空）</button>
+    <span style="font-size:12.5px;color:var(--muted)">试试看：先让一个核「改一下」抢到 M（独占+脏），再让另一个核「读/改」，看总线怎么把对方降权或作废。</span>
+  </div>
+  <div class="cores">
+    <div class="core">
+      <h3>核 0 · 变量 X</h3>
+      <div id="badge0" class="badge s-I">I</div>
+      <div class="btns">
+        <button onclick="op(0,'R')">📖 核0 读一下</button>
+        <button onclick="op(0,'W')">✏️ 核0 改一下</button>
+      </div>
+    </div>
+    <div class="core">
+      <h3>核 1 · 变量 X</h3>
+      <div id="badge1" class="badge s-I">I</div>
+      <div class="btns">
+        <button onclick="op(1,'R')">📖 核1 读一下</button>
+        <button onclick="op(1,'W')">✏️ 核1 改一下</button>
+      </div>
+    </div>
+  </div>
+  <div class="bus">
+    <h3>总线喊话记录</h3>
+    <div id="log" class="log"></div>
+  </div>
+  <div class="legend">
+    <span><i style="background:rgba(248,81,73,.6)"></i>M 我改过·独占·脏</span>
+    <span><i style="background:rgba(63,185,80,.6)"></i>E 只有我有·干净</span>
+    <span><i style="background:rgba(55,138,221,.6)"></i>S 大家都可读·干净</span>
+    <span><i style="background:var(--gray)"></i>I 作废了</span>
+  </div>
+  <div class="note">
+    💡 一个坑：<b>伪共享（False Sharing）</b>——俩核其实改的是<b>两个不同的变量</b>，却因为刚好挤在同一个缓存行里，被当成「同一份」反复喊话作废，性能莫名其妙暴跌。
+    这正是 OS 课讲「缓存行对齐 / 结构体 padding」的硬件根因；本课在硅层把它讲透。
+  </div>
+</div>
+
+<script>
+let cores=[{state:'I'},{state:'I'}];
+let log=[];
+
+function push(s){ log.push(s); const el=document.getElementById('log'); el.textContent=log.join('\n'); el.scrollTop=el.scrollHeight; }
+
+function op(idx,type){
+  const me=cores[idx], other=cores[1-idx];
+  const oname='Core'+(1-idx), mname='Core'+idx;
+  if(type==='R'){
+    push(`${mname} PrRd（当前 ${me.state}）`);
+    if(me.state==='I'){
+      if(other.state==='M'){ other.state='S'; push(`  总线 BusRd → ${oname} 写回内存并降为 S`); me.state='S'; }
+      else if(other.state==='E'){ other.state='S'; push(`  总线 BusRd → ${oname} 由 E 降为 S`); me.state='S'; }
+      else if(other.state==='S'){ push(`  总线 BusRd → 已是共享 S`); me.state='S'; }
+      else { me.state='E'; push(`  总线 BusRd（无其它副本）→ E 独占`); }
+    } else {
+      push(`  ${mname} ${me.state} 命中，无总线事务`);
+    }
+  } else {
+    push(`${mname} PrWr（当前 ${me.state}）`);
+    if(me.state==='I'){
+      if(other.state!=='I'){ other.state='I'; push(`  总线 BusRdX → 使 ${oname} 失效(I)`); }
+      me.state='M'; push(`  ${mname} → M（独占有改）`);
+    } else if(me.state==='E'){
+      me.state='M'; push(`  ${mname} E→M（本已独占，无需广播）`);
+    } else if(me.state==='S'){
+      other.state='I'; push(`  总线 BusUpgr → 使 ${oname} 失效(I)`); me.state='M'; push(`  ${mname} S→M`);
+    } else {
+      push(`  ${mname} 已 M，直接修改`);
+    }
+  }
+  render();
+}
+
+function render(){
+  for(let i=0;i<2;i++){
+    const b=document.getElementById('badge'+i);
+    b.textContent=cores[i].state;
+    b.className='badge s-'+cores[i].state;
+  }
+}
+function reset(){ cores=[{state:'I'},{state:'I'}]; log=[]; document.getElementById('log').textContent=''; render(); push('复位：两核的 X 都作废了（I）'); }
+
+document.getElementById('reset').onclick=reset;
+reset();
+</script>
+</body>
+</html>

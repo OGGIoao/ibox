@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CPU 流水线是怎么干活的 · 微架构内功①</title>
+<style>
+  :root{
+    --bg:#0d1117; --panel:#161b22; --panel2:#11161d; --border:#30363d;
+    --text:#e6edf3; --muted:#8b949e; --blue:#378add; --amber:#d29922;
+    --red:#f85149; --green:#3fb950; --gray:#484f58;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--text);
+    font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;padding:24px;}
+  h1{font-size:20px;font-weight:600;margin:0 0 4px;}
+  .sub{color:var(--muted);font-size:13px;margin-bottom:18px;line-height:1.6;}
+  .panel{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:16px;}
+  .controls{display:flex;flex-wrap:wrap;gap:10px;align-items:center;}
+  select,button{font-size:13px;padding:7px 14px;border-radius:8px;border:1px solid var(--border);
+    background:var(--panel2);color:var(--text);cursor:pointer;}
+  button:hover{border-color:var(--blue);}
+  button:disabled{opacity:.4;cursor:default;}
+  .stats{display:flex;gap:22px;flex-wrap:wrap;margin-top:12px;font-size:13px;}
+  .stat b{color:var(--blue);font-size:18px;font-weight:600;display:block;}
+  .stat span{color:var(--muted);}
+  table{border-collapse:collapse;font-size:12.5px;width:100%;}
+  th,td{border:1px solid var(--border);padding:6px 8px;text-align:center;}
+  th{background:var(--panel2);color:var(--muted);font-weight:500;}
+  td.instr{text-align:left;font-family:ui-monospace,Menlo,Consolas,monospace;color:var(--text);}
+  .cell{font-family:ui-monospace,Menlo,Consolas,monospace;min-width:64px;}
+  .c-norm{background:rgba(55,138,221,.18);color:#9ecbff;}
+  .c-bub{background:var(--panel2);color:var(--muted);}
+  .c-spec{background:rgba(210,153,34,.20);color:#f0c674;}
+  .c-flush{background:rgba(248,81,73,.22);color:#ff9a94;text-decoration:line-through;}
+  .c-branch{background:rgba(63,185,80,.20);color:#7ee787;}
+  tr.active{outline:2px solid var(--blue);outline-offset:-2px;}
+  .legend{display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin-top:8px;}
+  .legend i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:5px;vertical-align:-1px;}
+  .note{font-size:12.5px;color:var(--muted);line-height:1.6;margin-top:10px;}
+  code{background:var(--panel2);padding:1px 5px;border-radius:4px;color:#9ecbff;}
+</style>
+</head>
+<body>
+<h1>CPU 流水线是怎么干活的 · 交互动画</h1>
+<div class="sub">
+  一条指令从「取出来」到「干完」，要过 5 个工位：<b>取指 → 译码 → 执行 → 访存 → 写回</b>。
+  本动画让你亲眼看三件事：<b>① 数据冒险</b>（前面的结果还没算完，后面的指令得干等 1 拍）、
+  <b>② 分支猜中了</b>（提前赌对，白赚）、<b>③ 分支猜错了</b>（整条流水线作废重来，最亏）。
+  下面选一种「猜分支的方式」，点「开始跑」，看指令怎么在工位间流动。
+</div>
+
+<div class="panel">
+  <div class="controls">
+    <label style="font-size:13px;color:var(--muted)">猜分支的方式：</label>
+    <select id="mode">
+      <option value="on-correct">每次都猜对（最理想）</option>
+      <option value="on-wrong">故意猜错（最糟·整条线重来）</option>
+      <option value="off">干脆不猜（原地等结果）</option>
+    </select>
+    <button id="run">▶ 开始跑</button>
+    <button id="step">⏭ 走一步</button>
+    <button id="reset">🔄 重来</button>
+  </div>
+  <div class="legend">
+    <span><i style="background:rgba(55,138,221,.5)"></i>正常指令（在干活）</span>
+    <span><i style="background:var(--panel2)"></i>气泡（白等一拍）</span>
+    <span><i style="background:rgba(210,153,34,.6)"></i>猜着取的指（赌一把）</span>
+    <span><i style="background:rgba(248,81,73,.6)"></i>冲刷（作废重来）</span>
+    <span><i style="background:rgba(63,185,80,.6)"></i>分支指令</span>
+  </div>
+  <div class="stats">
+    <div class="stat"><b id="st-cycle">0</b><span>跑了几个周期</span></div>
+    <div class="stat"><b id="st-bubble">0</b><span>气泡（白等几拍）</span></div>
+    <div class="stat"><b id="st-flush">0</b><span>整条线作废几次</span></div>
+    <div class="stat"><b id="st-retired">0</b><span>干完几条</span></div>
+    <div class="stat"><b id="st-ipc">0.00</b><span>IPC（每周期几条）</span></div>
+  </div>
+</div>
+
+<div class="panel">
+  <table id="grid"></table>
+  <div class="note">
+    这条小程序长这样：先做一个加法、去内存拿个数、再用刚拿到的数做加法（<b>这里会卡一拍</b>）、
+    再几个加法，然后一个 <b>if 判断</b>（条件成立就跳到最后，跳过中间两步）。
+    重点对比三种「猜分支方式」下的 <b>白等几拍 / 整条线作废几次 / 每周期干几条（IPC）</b>：
+    猜对几乎不亏；猜错要把猜错的路全扔掉重来；不猜就在岔路口干等。
+    对应文档 §1–§3。
+  </div>
+</div>
+
+<script>
+// ===== 与验证版一致的流水线模拟器 =====
+function simulate(program, mode){
+  const actualTaken = i => program[i].branchTaken === true;
+  let pc=0, pipe=[null,null,null,null,null], history=[], bubbles=0, flushes=0;
+  let branchInflight=false, maxCycles=60, cycles=0, retiredCount=0;
+  function markFlushed(idx){ if(pipe[idx] && pipe[idx].speculative) pipe[idx].flushed=true; }
+  while(cycles < maxCycles){
+    history.push(pipe.map(x=> x?{...x}:null));
+    const exInstr = pipe[2]; let doFlush=false;
+    if(exInstr && exInstr.type==='branch' && !exInstr.resolved){
+      exInstr.resolved=true; branchInflight=false;
+      const actual=actualTaken(exInstr.idx);
+      const predicted = mode==='off'?null:(mode==='on-correct'?actual:!actual);
+      if(predicted!==null && predicted!==actual) doFlush=true;
+      pc = actual ? exInstr.target : exInstr.fallthrough;
+    }
+    let next=[null,null,null,null,null];
+    if(doFlush){
+      flushes++; markFlushed(0); markFlushed(1);
+      next=[null,null,pipe[2],pipe[3],pipe[4]];
+    } else if(mode==='off' && branchInflight){
+      bubbles++; next=[null,pipe[0],pipe[1],pipe[2],pipe[3]];
+    } else {
+      const idInstr=pipe[1]; let hazard=false;
+      if(idInstr && idInstr.src && pipe[2] && pipe[2].dest===idInstr.src) hazard=true;
+      if(hazard){
+        bubbles++; next=[pipe[0],pipe[1],null,pipe[2],pipe[3]];
+      } else {
+        let fetched=null;
+        if(pc<program.length){
+          fetched={...program[pc],idx:pc,speculative:branchInflight,flushed:false,resolved:false,fetched:true};
+          if(fetched.type==='branch'){
+            branchInflight=true;
+            if(mode!=='off'){ const pt=(mode==='on-correct')?actualTaken(pc):!actualTaken(pc); pc=pt?fetched.target:fetched.fallthrough; }
+          } else { pc++; }
+        }
+        next=[fetched,pipe[0],pipe[1],pipe[2],pipe[3]];
+      }
+    }
+    if(pipe[4]) retiredCount++;
+    pipe=next; cycles++;
+    const active=program.filter(p=>p.fetched && !p.flushed).every(p=>p.retired);
+    if(active && pipe.every(x=>x===null)){ history.push(pipe.map(x=>x?{...x}:null)); break; }
+  }
+  const usefulCycles=history.length-1;
+  return {history,bubbles,flushes,retiredCount,ipc:retiredCount/usefulCycles};
+}
+
+const PROGRAM=[
+  {label:'ADD r1',type:'add',dest:'r1',src:null},
+  {label:'LD  r2',type:'load',dest:'r2',src:null},
+  {label:'ADD r3',type:'add',dest:'r3',src:'r2'},
+  {label:'ADD r4',type:'add',dest:'r4',src:null},
+  {label:'BEQ',type:'branch',dest:null,src:'r1',branchTaken:true,target:7,fallthrough:5},
+  {label:'ADD r5',type:'add',dest:'r5',src:null},
+  {label:'ADD r6',type:'add',dest:'r6',src:null},
+  {label:'ADD r7',type:'add',dest:'r7',src:null},
+  {label:'ADD r8',type:'add',dest:'r8',src:null},
+];
+
+const STAGES=['IF','ID','EX','MEM','WB'];
+let result=null, step=0, timer=null, lastMode='on-correct';
+
+function cls(x){
+  if(!x) return 'c-bub';
+  if(x.flushed) return 'c-flush';
+  if(x.type==='branch') return 'c-branch';
+  if(x.speculative) return 'c-spec';
+  return 'c-norm';
+}
+function cellText(x){ return x? (x.flushed?'✕':x.label) : '—'; }
+
+function render(){
+  const g=document.getElementById('grid');
+  let html='<tr><th>周期</th><th>指令(取指)</th>'+STAGES.map(s=>`<th>${s}</th>`).join('')+'</tr>';
+  result.history.forEach((row,c)=>{
+    const isActive = c===step ? ' class="active"' : '';
+    html+=`<tr${isActive}><td>${c}</td><td class="instr">·</td>`;
+    html+=STAGES.map((s,i)=>`<td class="cell ${cls(row[i])}">${cellText(row[i])}</td>`).join('');
+    html+='</tr>';
+  });
+  g.innerHTML=html;
+  // 指令列：显示该周期 IF 阶段正在取的指令（若有）
+  const rows=g.querySelectorAll('tr');
+  result.history.forEach((row,c)=>{
+    const ifCell=row[0];
+    const td=rows[c+1].children[1];
+    td.textContent = ifCell ? (ifCell.flushed?'✕':ifCell.label) : '·';
+  });
+  document.getElementById('st-cycle').textContent=Math.min(step+1,result.history.length);
+  document.getElementById('st-bubble').textContent=result.bubbles;
+  document.getElementById('st-flush').textContent=result.flushes;
+  document.getElementById('st-retired').textContent=result.retiredCount;
+  document.getElementById('st-ipc').textContent=result.ipc.toFixed(2);
+}
+
+function rebuild(){
+  lastMode=document.getElementById('mode').value;
+  result=simulate(PROGRAM.map(p=>({...p})),lastMode);
+  step=0; render();
+}
+function play(){
+  if(!result) rebuild();
+  if(timer) return;
+  document.getElementById('run').textContent='⏸ 暂停';
+  timer=setInterval(()=>{
+    if(step>=result.history.length-1){ pause(); return; }
+    step++; render();
+  },650);
+}
+function pause(){ if(timer){clearInterval(timer);timer=null;} document.getElementById('run').textContent='▶ 开始跑'; }
+function doStep(){ if(!result||lastMode!==document.getElementById('mode').value) rebuild(); if(step<result.history.length-1){step++;render();} }
+
+document.getElementById('run').onclick=()=>{ timer?pause():play(); };
+document.getElementById('step').onclick=()=>{ pause(); doStep(); };
+document.getElementById('reset').onclick=()=>{ pause(); rebuild(); };
+document.getElementById('mode').onchange=()=>{ pause(); rebuild(); };
+
+rebuild();
+</script>
+</body>
+</html>
