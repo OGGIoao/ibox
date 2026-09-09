@@ -1,51 +1,53 @@
-# STATUS.md — terminal-list 当前状态
+# STATUS.md — Personal Terminal Companion 当前状态
 
-> 唯一当前态。更新进度 / 下一动作 / 阻塞时只改本文件，不在多处重复维护。
-> 更新日期：2026-09-08
+> 唯一当前态。更新进度、下一动作、阻塞时只改本文件。
+> 更新日期：2026-09-09
 
 ## 当前主线
 
-个人终端工具箱已成型且全部推到 GitHub：主搜索 `pycheat`（离线 + ollama 融合语义）、跨域套件 `tk`（7 域）、跨平台（macOS / Windows）。最新提交 `9ab0cd4` 刚完成 Windows 支持。随后用户决定「换人接手」，故建立本仓库**自包含中枢**（`AGENTS.md` / `STATUS.md` / `MEMORY.md`，取代此前指向私人 iCloud 的软链），以便交接。2026-09-08 将工作区剩余未跟踪内容（OS 第四卷环境变量分裂设计稿、芯片架构内功深潜目录）全量提交推送，远程 `main` 现为 `e2b421c`，**工作区与 GitHub 完全对齐**——接手人 `git clone` 即获完整中枢，可直接接手。
+**M0 — 可信基线**。
 
-## 已完成（按提交线）
+2026-09-09 老李确认路线 A：正式产品收敛为 Personal Terminal Companion，核心任务是“用人话找到并安全使用终端命令”。边界见 `docs/00-project/scope.md`，决策见 `docs/01-design/decisions/ADR-001-product-boundary.md`。
 
-1. init：三套核心文档（OS 课 / 芯片课 / 工具箱）
-2. 仓库自包含化：去掉 Obsidian 软链，纳入脚本
-3. 废弃旧版 `cheat`
-4. 剪贴板跨平台化
-5. 增量自学习别名 + 间隔复习
-6. ollama 语义检索 → 融合排序（`bge-m3` 自动优先）
-7. `bge-m3` 拉取成功 + 缓存模型感知修复 + 使用说明文档
-8. ollama 卡实战示例 + `ollama show` 演示卡 + 速查小抄附录
-9. `tk` 跨域套件（`tkcore` 引擎 + 7 域：note / log / gitx / clip / todo / explain / sum）
-10. 跨平台支持（`.cmd` 入口 + `install.ps1` + 首次自动初始化 cheatsheet）
-11. **本批：建立仓库自包含中枢（换人接手用）**
-12. **本批：全量同步 GitHub**——提交 OS 第四卷环境变量分裂设计稿 + 芯片架构内功深潜目录（6 动画 + 2 md），远程 `main` 现为 `e2b421c`，工作区与 GitHub 完全对齐。
+## 产品状态
 
-## 当前状态
+- `pycheat` + `cheatsheet.md`：核心产品；离线搜索可用，Ollama 为可选增强。
+- `tk`：Beta；七个现有域暂时保留，冻结扩域，等待真实使用验证。
+- `hi` / `gup`：POSIX 辅助工具，不属于 Windows 核心承诺。
+- OS / Shell 课程：解释层。
+- 芯片架构与非终端放映：内容实验区；M0 不扩写、不删除、不拆仓。
 
-- 最新提交：`e2b421c`（全量同步中枢到 GitHub）
-- 工具箱功能：全可用（mac / win）。`explain` / `sum` 需本机有 **chat 模型**才可用（`bge-m3` / `nomic-embed-text` 不能对话）。
-- 已实测验证：`note` / `todo` / `gitx` / `clip` / `log` 语义召回（含「连接被拒绝」→ 英文 `connection refused` 段 的**跨语言捞针**）；`explain` / `sum` 缺 chat 模型时友好降级。
-- 中枢：本仓库现含 `AGENTS.md` / `STATUS.md` / `MEMORY.md`（自包含，已纳入 git）；旧的 iCloud 软链移为 `.icloud.bak` 且不提交。
+## M0 已完成
 
-## 下一动作（接手人可接）
+- 产品边界 Scope 与 ADR-001 已落稿。
+- 建立 M0 验收规格与 8 条离线 golden queries。
+- 新增 `lsof` 卡，修复 `c 查端口占用` 错误命中 `du`。
+- 建立 5 项自动测试：卡名唯一、字段完整、golden queries、`pycheat` 与 `tk` smoke test。
+- 建立 HTML 本地链接检查；修复逻辑电路放映的目录路径及未完成页跳转。
+- 本地验证：5 tests passed；Python 编译通过；HTML 本地链接检查通过。
+- 新增三平台 GitHub Actions 配置（macOS / Windows / Linux），尚待远端首次运行验证。
+- 中枢已改用仓库内 `daily/`，不再依赖 clone 后不存在的私有 `.workbuddy/memory/`。
 
-1. 可选：拉 chat 模型 `ollama pull qwen2.5:0.5b`，让 `explain` / `sum` 立即可用。
-2. 可选：把 `tk` 软链到 `~/bin/tk`（参照 `pycheat` 的 `~/bin` 做法），统一入口。
-3. 可选（B 方案，未做）：把 `hi` / `gup` 用 Python 重写跨平台版（当前是 bash + mac 专属命令 `sw_vers` / `sysctl`，Windows 暂不可用）。
-4. 用户待决：iCloud 软链 `AGENTS.md` / `CLAUDE.md` 是否纳入公开仓库（**当前决定：不纳入**，已改为自包含）。
+## 下一动作
+
+1. 提交并推送 M0 基线切片，观察三平台 CI 首次运行。
+2. 修复任何平台差异；只有三平台 CI 通过后才关闭 M0 自动化基线项。
+3. 在真实 Windows PowerShell 环境验证 `install.ps1`、`c` 与 `tk` 入口；CI 不替代真人安装验收。
+4. 生成 `docs/03-learning/milestone-0-source-guide.md`，带老李完成 M0 Review。
+5. Review 后再决定 M1 的单一体验问题；候选优先从真实使用摩擦中产生。
 
 ## 阻塞 / 风险
 
-- 无硬阻塞。唯一风险是公开仓库误含 iCloud 私有路径软链——已在本次中枢化时排除（改为自包含文件）。
-- ollama 偶发 502 / 服务不健康：`tk` 已在启动期探测并温和提示；**跨语言查询（中文查英文日志）强依赖 ollama 健康**。
+- 当前无代码硬阻塞。
+- CI 配置尚未在 GitHub 实际执行，不能宣称三平台通过。
+- Windows PowerShell 安装尚无本轮真实设备验收。
+- `pycheat.py` 与 `tkcore.py` 仍各自维护一份近似排序逻辑；已有测试护栏，是否统一留到 M1 评估，不在 M0 提前重构。
 
-## 接手人第一步
+## M0 Exit Criteria
 
-1. `git clone` 仓库（或拷贝 `terminal-toolbox/`）。
-2. 读 `AGENTS.md` → 本文件 → `MEMORY.md` →（日记在 `.workbuddy/memory/`，属本机私有记忆，clone 后无日记属正常；接手以本文件 + MEMORY 为准）。
-3. 装 Python（3.9+，勾 Add to PATH）。
-4. （可选）装 ollama + `ollama pull bge-m3` 开语义检索。
-5. **macOS**：把 `pycheat` / `tk` 软链到 `~/bin`。**Windows**：PowerShell 跑 `install.ps1` 后重开终端，用 `c` / `tk`。
-6. 试：`c`、`c 查端口占用`、`tk note 记一笔`、`tk log "连接被拒绝" -p app.log`。
+- 8 条 golden queries 全部通过：本地已满足。
+- 命令卡名称唯一、必需字段完整：本地已满足。
+- HTML 本地链接无失效目标：本地已满足。
+- macOS / Windows / Linux CI 通过：待远端验证。
+- README / STATUS 与实际能力一致：本轮已校正，待 Review。
+- Windows PowerShell 真人安装验收：待完成。

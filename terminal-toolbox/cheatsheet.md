@@ -79,6 +79,15 @@
 - Windows对照: `tasklist` / `Get-Process`
 - 来源卷: 第一卷 内核与进程
 
+## lsof
+- 别名: 查端口占用,端口被谁占用,谁占了端口,监听端口,port,端口进程
+- 作用: 查看哪些进程打开了文件或占用了网络端口
+- 用法: lsof -i :<端口> ; lsof -iTCP -sTCP:LISTEN -n -P
+- 示例: `lsof -i :3000` → 找出占用 3000 端口的进程；`lsof -iTCP -sTCP:LISTEN -n -P` → 列出 TCP 监听端口
+- 踩坑: 查不到时可能需要 `sudo`；结束进程前先确认 PID 和程序身份，不要见端口就强杀
+- Windows对照: `netstat -ano | findstr :3000` 查 PID，再用 `tasklist /FI "PID eq <PID>"` 确认程序
+- 来源卷: 第二卷 文件系统 / 网络排障
+
 ## kill
 - 别名: 杀进程,关掉程序,kill process
 - 作用: 向进程"发信号"（不是直接杀死），默认 SIGTERM(15) 温和请求退出
@@ -421,12 +430,13 @@
 - 别名: 向量化接口,embedding调用,语义向量,文本转向量
 - 作用: 用任意程序调 ollama 做文本向量化（pycheat --llm 就是这么干的）
 - 用法: POST http://localhost:11434/api/embeddings   body: {"model":...,"prompt":...}
-- 示例(nomic): `curl -s -X POST http://localhost:11434/api/embeddings -H "Content-Type: application/json" -d '{"model":"nomic-embed-text","prompt":"要向量化的文本"}'`
+- 示例: `curl -s -X POST http://localhost:11434/api/embeddings -H "Content-Type: application/json" -d '{"model":"nomic-embed-text","prompt":"要向量化的文本"}'`
 - 示例(bge-m3): 同上把 model 换成 `bge-m3` 即可；bge-m3 中文区分度约 nomic 的 6~7 倍，pycheat 已自动优先
 - 示例(验证 pycheat 当前用哪个): `python3 -c "import sys;sys.path.insert(0,'~/terminal-toolbox');import pycheat;print(pycheat.resolve_embed_model())"`
 - 踩坑: 返回 JSON 里的 `embedding` 字段是浮点数组（nomic-embed-text 768 维 / bge-m3 1024 维）；需先 `ollama pull` 对应模型
 - 踩坑: 向量缓存 `~/.config/cheat/.pycheat_vectors.json` 按「内容hash+模型名」存，换模型会自动重建，不会用错旧向量
 - Windows对照: 同（URL 不变，仍是本机 11434）
+- 来源卷: 工具箱·ollama
 
 ## ollama show
 - 别名: 看模型详情,模型参数,模型信息,查模型配置

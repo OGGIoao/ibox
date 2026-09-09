@@ -1,11 +1,12 @@
-# AGENTS.md — terminal-list 接手入口
+# AGENTS.md — Personal Terminal Companion 接手入口
 
 > 任何 AI Agent（WorkBuddy / Claude Code / Codex / Cursor 等）或人接手本项目前，先读此文件。
 > 本文件是仓库里**唯一必须首先读取**的入口。保持纯 markdown，不嵌入任何 Agent 私有格式。
 
 ## 1. 这是什么
 
-- **个人终端工具箱**：一套自研 shell / Python CLI 小工具集合，命令行卡片「即查即用、意图式搜索」。
+- **正式产品**：Personal Terminal Companion，用人话找到并安全使用终端命令；核心是 `pycheat` + `cheatsheet.md`。
+- **边界**：OS / Shell 课程是解释层，`tk` 是 Beta，芯片架构与非终端放映是内容实验区。详见 `docs/00-project/scope.md`。
 - 公开仓库：`https://github.com/OGGIoao/terminal-list`
 - **真源原则**：本仓库是项目唯一真源。知识只存在于 `cheatsheet.md` 一份，代码与文档读取它，不复制维护两份。
 
@@ -14,14 +15,17 @@
 | 路径 | 内容 |
 |------|------|
 | `terminal-toolbox/pycheat.py` | 主搜索引擎（别名 `c`）：离线意图匹配 + ollama 融合语义检索 |
-| `terminal-toolbox/cheatsheet.md` | 数据源（知识真源），~48 张卡（含 8 张 ollama 卡） |
+| `terminal-toolbox/cheatsheet.md` | 数据源（知识真源），49 张卡（含 8 张 ollama 卡） |
 | `terminal-toolbox/tk` + `tkcore.py` | 跨域套件：note / log / gitx / clip / todo / explain / sum |
 | `terminal-toolbox/*.cmd` + `install.ps1` | Windows 入口与一键安装 |
 | `terminal-toolbox/跨平台使用指南.md` · `pycheat-使用说明.md` · `tk-技术解读.md` | 文档 |
 | `README.md` | 人类蓝图 |
+| `docs/00-project/scope.md` | 产品边界（Goal / Non-Goal / 组成） |
+| `docs/01-design/decisions/` | 已接受的关键决策（ADR） |
+| `specs/` | 可执行的验收规格 |
+| `daily/` | 中立、append-only 工作日记 |
 | `个人终端工具箱.md` | 活文档（工具卡 + 用法 + 路线图） |
 | `STATUS.md` / `MEMORY.md` | 当前状态 / 长期事实（本中枢） |
-| `.workbuddy/memory/YYYY-MM-DD.md` | 工作日记（最近优先） |
 | `操作系统底层与终端精通课程.md` | OS 底层与终端精通课程纵向主线（环境变量分裂 / 进程环境等） |
 | `芯片架构横向博览知识系统.md` | 芯片架构横向博览（产业编年史式，行业 / 系统接口层） |
 | `芯片架构内功/` | 芯片架构纵向深潜（微架构 / SIMT / MESI 等，含 6 动画 + 2 md） |
@@ -34,7 +38,7 @@
 1. 读 `AGENTS.md`（本文件）
 2. 读 `STATUS.md`，确认当前主线、下一动作、阻塞
 3. 读 `MEMORY.md`，掌握架构、约定与硬伤
-4. 读 `daily/` 最近 1–2 篇（本仓库日记在 `.workbuddy/memory/`，如 `2026-09-05.md`）
+4. 读 `daily/` 最近 1–2 篇
 5. 按需读 `README.md` / `个人终端工具箱.md` / `terminal-toolbox/` 文档（用 grep 检索，别全量读大文档）
 6. 干活
 7. 收尾：按 §5 更新状态、向日记 append、commit 到本仓库
@@ -50,7 +54,7 @@
 
 ## 5. 记忆写入协议（所有 Agent 统一）
 
-- 实质工作后：向 `.workbuddy/memory/YYYY-MM-DD.md` append 简记（做了什么 / 结论 / 待办 / 踩坑）。
+- 实质工作后：向 `daily/YYYY-MM-DD.md` append 简记（做了什么 / 结论 / 待办 / 踩坑）。
 - 当前态变化 → 更新 `STATUS.md`（唯一当前态，避免多处重复维护）。
 - 长期约定 / 偏好变化 → 原地更新 `MEMORY.md`（整体 ≤ 4000 字，纯 markdown）。
 - **禁止**写入 Agent 私有注入块（`<system-reminder>`、专用 YAML 指令块、`<!-- ... -->` 控制标记）。中枢文件必须纯 markdown，任何 Agent 与 Obsidian 都能无损读取。

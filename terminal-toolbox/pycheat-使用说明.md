@@ -25,7 +25,7 @@
 | 主程序 | `~/terminal-toolbox/pycheat.py` | 全部逻辑，已设可执行位 |
 | 全局命令 | `~/bin/pycheat`（软链 → 上面） | 任意目录敲 `pycheat` 都行 |
 | 短名别名 | `~/.cheat.zsh` → `~/.zshrc` 第 8 行 `source` | `alias c='pycheat'` |
-| 数据源 | `~/.config/cheat/cheatsheet.md` | 48 张命令卡（含 8 张 ollama），所见即所得 |
+| 数据源 | `~/.config/cheat/cheatsheet.md` | 49 张命令卡（含 8 张 ollama），所见即所得 |
 | 学习库 | `~/.config/cheat/.pycheat_learned.json` | 自学习说法库 |
 | 复习库 | `~/.config/cheat/.pycheat_strength.json` | 每张卡的查看/遗忘曲线 |
 | 向量缓存 | `~/.config/cheat/.pycheat_vectors.json` | ollama 卡片向量，按内容 hash 缓存 |

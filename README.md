@@ -1,20 +1,19 @@
-# 个人终端工具箱 · Personal Terminal Toolbox
+# Personal Terminal Companion
 
-> 👋 **接手本项目？** 按顺序读：[`AGENTS.md`](AGENTS.md) → [`STATUS.md`](STATUS.md) → [`MEMORY.md`](MEMORY.md) → 最近日记 `.workbuddy/memory/2026-09-05.md`。
+> 👋 **接手本项目？** 按顺序读：[`AGENTS.md`](AGENTS.md) → [`STATUS.md`](STATUS.md) → [`MEMORY.md`](MEMORY.md) → [`daily/`](daily/)。
 
-> 把我亲手用 shell / Python 造的命令行工具与脚本，沉淀成**可复用、可检索、可跨机器同步**的个人命令库。
-> 设计初衷：**你不用记命令名，只要会说"想做的事"**（中文 / 拼音 / 英文都行），工具替你找到该敲的那条。
+> **你不用记命令名，只要会说“想做的事”。** 工具帮你找到一张可信、可复制、带风险提示和平台差异的命令卡。
 
 ---
 
 ## 这是什么
 
-一个"边学边造"的 terminal 工具箱。它既是**活文档**（每张卡记录一个工具的用途 / 用法 / 示例 / 通俗别名 / 踩坑 / 平台对照），也是**可运行的脚本集合**（`pycheat` / `hi` / `gup`）。
+正式产品由 `pycheat` 和命令卡真源 `terminal-toolbox/cheatsheet.md` 组成；离线搜索永远可用，Ollama 只提供可选语义增强。完整产品边界见 [`scope.md`](docs/00-project/scope.md)，当前进度只看 [`STATUS.md`](STATUS.md)。
 
-配套课程文档（也在此仓库，便于追溯背景）：
+仓库中的配套内容：
 - [`个人终端工具箱.md`](个人终端工具箱.md) — 本工具箱的说明书与成长路线图（工具卡 #1–#4 在此）
-- [`操作系统底层与终端精通课程.md`](操作系统底层与终端精通课程.md) — 主线课程，工具卡里的"关联 OS 课卷"指向它
-- [`芯片架构横向博览知识系统.md`](芯片架构横向博览知识系统.md) — 横向行业追踪
+- [`操作系统底层与终端精通课程.md`](操作系统底层与终端精通课程.md) — OS / Shell 解释层
+- [`芯片架构横向博览知识系统.md`](芯片架构横向博览知识系统.md) 与 [`芯片架构内功/`](芯片架构内功/) — 内容实验区，不属于当前核心产品承诺
 
 ---
 
@@ -26,6 +25,7 @@
 | 2 | `hi` | shell 脚本（`hi.sh`，软链 `~/bin/hi`） | 你是谁 / 在哪台机器 / 什么系统芯片，一眼看清 |
 | 3 | `gup` | shell 脚本（`gup.sh`，软链 `~/bin/gup`） | 一键 git 同步（pull ff-only → 提交 → push），安全红线不 rm/不 force |
 | 4 | `pycheat` | Python CLI（`pycheat.py`，软链 `~/bin/pycheat`） | 离线命令速查：开场屏（置顶+最近+↻该复习的）+ 人话搜索 + 自学习别名 + **本地 ollama 语义检索**(同义也能命中) + 彩色卡面 + 浏览不退出 |
+| β | `tk` | Python CLI（Beta） | note / log / gitx / clip / todo / explain / sum；冻结扩域，等待真实使用验证 |
 
 更完整的字段说明、截图式卡面示例，见 [`个人终端工具箱.md`](个人终端工具箱.md)。
 
@@ -44,10 +44,11 @@ terminal-list/
 ├── .gitignore
 ├── terminal-toolbox/                # ← 真正可运行的工具
 │   ├── pycheat.py        # 工具#4：命令速查 CLI（仅标准库；可选接本机 ollama 做语义检索，零额外依赖）
+│   ├── tk + tkcore.py     # Beta：跨域工具入口 + 共享检索引擎
 │   ├── hi.sh             # 工具#2：系统/身份速览
 │   ├── gup.sh            # 工具#3：安全一键 git 同步
 │   ├── seed_aliases.py   # 给 cheatsheet 批量补「别名:」字段的辅助脚本
-│   └── cheatsheet.md     # 数据源（47 张卡，含 7 张 ollama 指令卡）；pycheat 读它
+│   └── cheatsheet.md     # 数据源（49 张卡，含 8 张 ollama 指令卡）；pycheat 读它
 └── 可视化放映/                      # 课程配套幻灯片（HTML）
 ```
 
@@ -68,6 +69,7 @@ chmod +x terminal-toolbox/*.sh terminal-toolbox/pycheat.py
 ln -s "$PWD/terminal-toolbox/hi.sh"        ~/bin/hi
 ln -s "$PWD/terminal-toolbox/gup.sh"       ~/bin/gup
 ln -s "$PWD/terminal-toolbox/pycheat.py"   ~/bin/pycheat
+ln -s "$PWD/terminal-toolbox/tk"           ~/bin/tk
 
 # 3) 桥接层：c 别名 + 敲错提示钩子（旧版 cheat.zsh 已废弃，这里重建精简版）
 cat > ~/.cheat.zsh <<'EOF'
@@ -91,8 +93,8 @@ cp terminal-toolbox/cheatsheet.md ~/.config/cheat/cheatsheet.md
 ```
 
 **Windows / Linux 说明**
-- `hi.sh` / `gup.sh` 是 POSIX shell 脚本，在 Linux/macOS 通用；Windows 需用 WSL 或 Git Bash。
-- `pycheat.py` 是纯 Python 标准库，**跨平台可跑**。剪贴板复制自动探测：macOS `pbcopy` / Windows PowerShell / WSL `clip.exe` / Linux `wl-copy`·`xclip`·`xsel` / Termux，均无则降级为手写复制。
+- `pycheat` / `tk` 提供纯 Python 主路径和 Windows `.cmd` 入口；安装见 [`跨平台使用指南.md`](terminal-toolbox/跨平台使用指南.md)。Windows CI 覆盖 Python 路径，PowerShell 安装流程仍需真实设备验收。
+- `hi.sh` / `gup.sh` 是 POSIX shell 辅助工具，不属于 Windows 核心承诺；Windows 需 WSL 或 Git Bash。
 
 **cheatsheet 兜底**：`pycheat` 优先读 `~/.config/cheat/cheatsheet.md`；若该路径不存在，会自动改用**脚本同目录的 `cheatsheet.md`**。所以即便跳过第 4 步，clone 下来直接 `python3 terminal-toolbox/pycheat.py` 也能用。
 
@@ -105,7 +107,7 @@ cp terminal-toolbox/cheatsheet.md ~/.config/cheat/cheatsheet.md
 pycheat                       # 开场屏：置顶常用 + 最近查看 + ↻该复习的，输入"想做的事"回车即搜
 pycheat 看哪个程序最占内存     # 直接意图搜索 → 进入彩色卡面浏览（命中后该说法被记住，下次直命中）
 pycheat -c 看哪个文件夹最大    # 把最佳匹配的「示例」复制到剪贴板，⌘V 直接跑
-pycheat -l                    # 列出全部 47 张卡（编号 + 一句话用途）
+pycheat -l                    # 列出全部 49 张卡（编号 + 一句话用途）
 pycheat --learn show          # 查看你「教给它的」人话说法与命中次数
 pycheat --forget 看哪个程序最占内存   # 忘掉某个自学习说法
 pycheat --llm 哪个进程吃 RAM       # 强制本地 ollama 语义检索（同义也能命中；无 ollama 则报错退出）

@@ -71,7 +71,7 @@ Write-Host "🎉 安装完成！请「重新打开 PowerShell」使 PATH 与别�
 Write-Host "   c              # 进开场屏（推荐 / 复习 / 语义提示）" -ForegroundColor White
 Write-Host "   c 查端口占用    # 人话搜命令" -ForegroundColor White
 Write-Host "   c -c 关键词     # 复制示例到剪贴板" -ForegroundColor White
-Write-Host "   tk note 记一笔  # 终端快记本" -ForegroundColor White
+Write-Host "   tk note -a '记一笔'  # 追加终端快记" -ForegroundColor White
 Write-Host ""
 Write-Host "数据同步：把 C:\Users\你\.config\cheat\cheatsheet.md 放进 OneDrive/iCloud 并双向同步，" -ForegroundColor DarkGray
 Write-Host "即可让 Windows 与 macOS 共享同一份命令卡（详见跨平台使用指南.md）。" -ForegroundColor DarkGray
