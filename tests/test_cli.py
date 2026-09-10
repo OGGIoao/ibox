@@ -40,6 +40,11 @@ class CliSmokeTests(unittest.TestCase):
         self.assertIn("note", result.stdout)
         self.assertIn("sum", result.stdout)
 
+    def test_html_link_checker(self):
+        result = self.run_cli("scripts/check_html_links.py")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("检查通过", result.stdout)
+
 
 if __name__ == "__main__":
     unittest.main()

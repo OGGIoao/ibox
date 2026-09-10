@@ -3,10 +3,21 @@
 
 from html.parser import HTMLParser
 from pathlib import Path
+import sys
 from urllib.parse import unquote, urlsplit
 
 
 ROOT = Path(__file__).resolve().parents[1]
+
+
+def _ensure_utf8_stdio():
+    for stream in (sys.stdout, sys.stderr):
+        encoding = (getattr(stream, "encoding", "") or "").lower().replace("-", "")
+        if encoding != "utf8" and hasattr(stream, "reconfigure"):
+            stream.reconfigure(encoding="utf-8")
+
+
+_ensure_utf8_stdio()
 
 
 class LinkParser(HTMLParser):
