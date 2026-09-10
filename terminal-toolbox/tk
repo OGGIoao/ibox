@@ -15,6 +15,17 @@
 """
 import os, sys, json, argparse, subprocess, datetime, uuid
 
+
+def _ensure_utf8_stdio():
+    """让 Windows 重定向/旧代码页也能稳定输出中文。"""
+    for stream in (sys.stdout, sys.stderr):
+        encoding = (getattr(stream, "encoding", "") or "").lower().replace("-", "")
+        if encoding != "utf8" and hasattr(stream, "reconfigure"):
+            stream.reconfigure(encoding="utf-8")
+
+
+_ensure_utf8_stdio()
+
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import tkcore as T
 

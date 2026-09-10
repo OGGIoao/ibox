@@ -34,6 +34,17 @@ import subprocess
 import sys
 import time
 
+
+def _ensure_utf8_stdio():
+    """让 Windows 重定向/旧代码页也能稳定输出中文。"""
+    for stream in (sys.stdout, sys.stderr):
+        encoding = (getattr(stream, "encoding", "") or "").lower().replace("-", "")
+        if encoding != "utf8" and hasattr(stream, "reconfigure"):
+            stream.reconfigure(encoding="utf-8")
+
+
+_ensure_utf8_stdio()
+
 CHEAT_SHEET = os.path.expanduser("~/.config/cheat/cheatsheet.md")
 FIELDS = ["作用", "用法", "示例", "踩坑", "Windows对照", "来源卷", "别名"]
 

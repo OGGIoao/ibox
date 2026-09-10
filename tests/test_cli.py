@@ -16,11 +16,14 @@ class CliSmokeTests(unittest.TestCase):
             env["HOME"] = home
             env["USERPROFILE"] = home
             env["PYTHONDONTWRITEBYTECODE"] = "1"
+            # 模拟 Windows runner 的非 UTF-8 默认代码页，防止中文输出回归。
+            env["PYTHONIOENCODING"] = "cp1252"
             return subprocess.run(
                 [sys.executable, *args],
                 cwd=ROOT,
                 env=env,
                 text=True,
+                encoding="utf-8",
                 capture_output=True,
                 timeout=15,
                 check=False,
