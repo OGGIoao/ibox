@@ -22,3 +22,24 @@ jobs:
         run: python -m unittest discover -s tests -v
       - name: Check HTML links
         run: python scripts/check_html_links.py
+      - name: Test Windows command wrappers
+        if: runner.os == 'Windows'
+        shell: cmd
+        run: |
+          terminal-toolbox\pycheat.cmd --no-llm --list
+          terminal-toolbox\tk.cmd --help
+      - name: Parse Windows installer
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $tokens = $null
+          $errors = $null
+          [System.Management.Automation.Language.Parser]::ParseFile(
+            (Resolve-Path 'terminal-toolbox/install.ps1'),
+            [ref]$tokens,
+            [ref]$errors
+          ) | Out-Null
+          if ($errors.Count -gt 0) {
+            $errors | ForEach-Object { Write-Error $_.Message }
+            exit 1
+          }
