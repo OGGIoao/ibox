@@ -1,57 +1,70 @@
-# STATUS.md — terminal-list 当前状态
+# STATUS.md — Personal Terminal Companion 当前状态
 
-> 唯一当前态。更新进度 / 下一动作 / 阻塞时只改本文件，不在多处重复维护。
+> 唯一当前态。更新进度、下一动作、阻塞时只改本文件。
 > 更新日期：2026-09-14
 
 ## 当前主线
 
-个人终端工具箱已成型且全部推到 GitHub：主搜索 `pycheat`（离线 + ollama 融合语义）、跨域套件 `tk`（7 域）、跨平台（macOS / Windows）。最新提交 `9ab0cd4` 刚完成 Windows 支持。随后用户决定「换人接手」，故建立本仓库**自包含中枢**（`AGENTS.md` / `STATUS.md` / `MEMORY.md`，取代此前指向私人 iCloud 的软链），以便交接。2026-09-08 将工作区剩余未跟踪内容（OS 第四卷环境变量分裂设计稿、芯片架构内功深潜目录）全量提交推送，远程 `main` 现为 `e2b421c`，**工作区与 GitHub 完全对齐**——接手人 `git clone` 即获完整中枢，可直接接手。
+**M0 — 可信基线**（主体已完成）；其上并行完成了一次**用户面入口收敛**。
 
-2026-09-14 完成**入口收敛**：用户面从 5 个顶层命令（`c` / `pycheat` / `tk` / `hi` / `gup`）收敛为**唯一入口 `ibox`**（子命令 `how` / `find` / `add` / `done` / `ask` / `hi` / `sync`），旧名全部保留为兼容壳；同时修掉 3 处交互硬伤（Windows 翻页失效、浏览内重搜范围错、todo 不显示 id），`hi` / `gup` 用 Python 重写后 **Windows 也终于可用**。
+2026-09-09 老李确认路线 A：正式产品收敛为 Personal Terminal Companion，核心任务是「用人话找到并安全使用终端命令」。边界见 `docs/00-project/scope.md`，决策见 `docs/01-design/decisions/ADR-001-product-boundary.md`。
 
-## 已完成（按提交线）
+2026-09-14 老Z 决策：**用户面入口从 5 个顶层命令（`c` / `pycheat` / `tk` / `hi` / `gup`）收敛为唯一入口 `ibox`**（`how` / `find` / `add` / `done` / `ask` / `hi` / `sync` + 开场使用指南），旧名全部保留为兼容壳。该决策**覆盖 ADR-001 的两条 Non-Goal**（「不重写 `hi` / `gup`」「不新增大型交互功能」），依据见 `docs/01-design/decisions/ADR-002-ibox-single-entry.md`。
 
-1. init：三套核心文档（OS 课 / 芯片课 / 工具箱）
-2. 仓库自包含化：去掉 Obsidian 软链，纳入脚本
-3. 废弃旧版 `cheat`
-4. 剪贴板跨平台化
-5. 增量自学习别名 + 间隔复习
-6. ollama 语义检索 → 融合排序（`bge-m3` 自动优先）
-7. `bge-m3` 拉取成功 + 缓存模型感知修复 + 使用说明文档
-8. ollama 卡实战示例 + `ollama show` 演示卡 + 速查小抄附录
-9. `tk` 跨域套件（`tkcore` 引擎 + 7 域：note / log / gitx / clip / todo / explain / sum）
-10. 跨平台支持（`.cmd` 入口 + `install.ps1` + 首次自动初始化 cheatsheet）
-11. **本批：建立仓库自包含中枢（换人接手用）**
-12. **本批：全量同步 GitHub**——提交 OS 第四卷环境变量分裂设计稿 + 芯片架构内功深潜目录（6 动画 + 2 md），远程 `main` 现为 `e2b421c`，工作区与 GitHub 完全对齐。
-13. **本批：入口收敛为 `ibox` + 修 3 处交互硬伤**——新建统一入口 `ibox`（薄壳，复用 `pycheat` / `tkcore` / `tk`，不重写）；开场屏即使用指南；`hi` / `sync` Python 化（Windows 可用）；旧名 `c` / `pycheat` / `tk` / `hi` / `gup` 保留兼容；`cheatsheet.md` 与全部文档同步改名。
+## 产品状态
 
-## 当前状态
+- **用户面入口**：`ibox`（短名 `c`）——唯一入口；旧名 `pycheat` / `tk` / `hi` / `gup` 为兼容壳，全部仍可用。
+- `pycheat` + `cheatsheet.md`：正式产品核心（命令卡引擎 + 知识真源）；离线搜索永远可用，Ollama 为可选增强。
+- `tk`：Beta；七个现有域保留，**冻结扩域**（ADR-001），等待真实使用验证；其域函数现被 `ibox` 复用。
+- `hi` / `gup`：已由 bash 重写为 Python（`ibox hi` / `ibox sync`），**Windows 现在也能用** —— ADR-001 中「POSIX 辅助、非 Windows 承诺」的表述据此更新。
+- OS / Shell 课程：解释层。
+- 芯片架构与非终端放映：内容实验区；M0 不扩写、不删除、不拆仓。
 
-- 最新提交：`<本次提交>`（2026-09-14 入口收敛为 ibox）
-- 用户面入口：**`ibox`**（短名 `c`）；旧名 `pycheat` / `tk` / `hi` / `gup` 为兼容壳，全部仍可用。
-- 工具箱功能：全可用（mac / win）。`ibox ask` 需本机有 **chat 模型**才可用（`bge-m3` / `nomic-embed-text` 不能对话）。
-- 已实测验证：`note` / `todo` / `gitx` / `clip` / `log` 语义召回（含「连接被拒绝」→ 英文 `connection refused` 段 的**跨语言捞针**）；`explain` / `sum` 缺 chat 模型时友好降级。
-- 中枢：本仓库现含 `AGENTS.md` / `STATUS.md` / `MEMORY.md`（自包含，已纳入 git）；旧的 iCloud 软链移为 `.icloud.bak` 且不提交。
+## M0 已完成
 
-## 下一动作（接手人可接）
+- 产品边界 Scope 与 ADR-001 已落稿。
+- 建立 M0 验收规格与 8 条离线 golden queries。
+- 新增 `lsof` 卡，修复 `c 查端口占用` 错误命中 `du`。
+- 建立 6 项自动测试：卡名唯一、字段完整、golden queries、`pycheat` / `tk` / HTML checker smoke test。
+- 建立 HTML 本地链接检查；修复逻辑电路放映的目录路径及未完成页跳转。
+- 本地验证：6 tests passed；Python 编译通过；HTML 本地链接检查通过。
+- 三平台 GitHub Actions 已通过：macOS / Windows / Linux 均完成编译、测试和链接检查；Windows 额外通过 `.cmd` 入口执行与 `install.ps1` 语法解析（run `34424799213`）。
+- 修复 Windows `cp1252` 默认代码页导致中文 CLI 输出崩溃的问题，并加入模拟非 UTF-8 环境的回归测试。
+- 中枢已改用仓库内 `daily/`，不再依赖 clone 后不存在的私有 `.workbuddy/memory/`。
 
-1. 可选：拉 chat 模型 `ollama pull qwen2.5:0.5b`，让 `ibox ask` 立即可用。
-2. 可选：`ibox find` 一次只搜一个域（默认 note）。若想「一句话一次搜全部域」，需加跨域聚合排序——**未做**（成本不均：log 要扫盘、git 要读仓库）。
-3. 可选：给 `ibox` 加 zsh tab 补全与 ↑ 调历史（当前开场屏用裸 `input()`，没有历史）。
-4. 可选：`ibox sync` 沿用 `gup.sh` 的 `git add -A`（无差别暂存），与本仓库「只 add 明确涉及文件」的纪律不同——**风险已识别，行为未改**（改了会影响日常同步习惯）。
-5. 用户待决：iCloud 软链 `AGENTS.md` / `CLAUDE.md` 是否纳入公开仓库（**当前决定：不纳入**，已改为自包含）。
-6. 已完成（原待办）：`tk` 软链 `~/bin/tk` ✅；`hi` / `gup` Python 跨平台化 ✅（收进 `ibox hi` / `ibox sync`）。
+## 本批（2026-09-14）：`ibox` 入口收敛 + 3 处交互硬伤
+
+- 新增统一入口 `terminal-toolbox/ibox`：**薄壳，不造新引擎** —— `how` 转调 `pycheat`，`find` / `add` / `done` / `ask` 转调 `tk`（动态加载无后缀脚本，不复制代码），`hi` / `sync` 为 Python 实现；无子命令时打印**完整使用指南**。
+- 修 3 处硬伤：
+  1. **Windows 浏览失效** —— `read_key()` 只实现 termios 分支，`import tty, termios` 在 Windows 失败即返回 `None` → 只显示第一张卡；已增加 `msvcrt` 分支。
+  2. **浏览中按 `/` 重搜范围错** —— `search_rank(order, q2)` 只搜当前结果集，已改为全量 `cards`。
+  3. **`todo` 列表不显示 id** 而完成命令要求传 id —— note / todo / clip 列表统一显示短 id（如 `[a3f21c]`）。
+- 顺手：`add` / `record` / `done` 不再打 ollama 噪音提示（仅检索类动作提示）。
+- 跨平台集成：新增 `ibox.cmd`；`install.ps1` 别名块改为首尾标记包裹（幂等、可原地升级）。
+- 文档与数据源同步：`pycheat-使用说明.md` → `ibox-使用说明.md`（重写）；`cheatsheet.md`、`跨平台使用指南.md`、`tk-技术解读.md`、`AGENTS.md`、`README.md`、`个人终端工具箱.md` 同步更新。
+- 本地验证：隔离 HOME 下逐子命令实测通过（含 `done <短id>` 端到端）；语法编译通过。
+
+## 下一动作
+
+1. **与老李的 M0 Review 对齐**：ibox 覆盖了 ADR-001 两条 Non-Goal，需确认 ADR-002 与 `scope.md` 同步，否则 M0 Exit Criteria 中「README / STATUS 与实际能力一致」会对不上。
+2. 在真实 Windows PowerShell 环境验证 `install.ps1`、`ibox`（含翻页修复）与 `c` —— CI 不替代真人安装验收。
+3. 可选：拉 chat 模型 `ollama pull qwen2.5:0.5b`，让 `ibox ask` 立即可用。
+4. 可选：`ibox find` 目前一次只搜一个域（默认 note）；跨域聚合排序**未做**（成本不均：log 扫盘、git 读仓库）。
+5. 可选：给 `ibox` 加 zsh tab 补全与 ↑ 调历史（当前开场屏用裸 `input()`）。
+6. 可选：`ibox sync` 沿用原 `gup.sh` 的 `git add -A`（无差别暂存），与本仓库「只 add 明确涉及文件」的纪律不同 —— **风险已识别，行为未改**。
 
 ## 阻塞 / 风险
 
-- 无硬阻塞。唯一风险是公开仓库误含 iCloud 私有路径软链——已在本次中枢化时排除（改为自包含文件）。
-- ollama 偶发 502 / 服务不健康：`tk` 已在启动期探测并温和提示；**跨语言查询（中文查英文日志）强依赖 ollama 健康**。
+- 当前无代码硬阻塞。
+- **流程风险（新增）**：ibox 收敛与 ADR-001 边界存在显式冲突，已由老Z 决策覆盖；若不落稿 ADR-002 并同步 `scope.md`，后续接手人会在「边界文档」与「代码现状」之间反复困惑。
+- Windows PowerShell 安装尚无本轮真实设备验收。
+- `pycheat.py` 与 `tkcore.py` 仍各自维护一份近似排序逻辑；已有测试护栏，是否统一留到 M1 评估，不在 M0 提前重构。
 
-## 接手人第一步
+## M0 Exit Criteria
 
-1. `git clone` 仓库（或拷贝 `terminal-toolbox/`）。
-2. 读 `AGENTS.md` → 本文件 → `MEMORY.md` →（日记在 `.workbuddy/memory/`，属本机私有记忆，clone 后无日记属正常；接手以本文件 + MEMORY 为准）。
-3. 装 Python（3.9+，勾 Add to PATH）。
-4. （可选）装 ollama + `ollama pull bge-m3` 开语义检索。
-5. **macOS**：把 `ibox` 软链到 `~/bin`（`ln -s ~/terminal-toolbox/ibox ~/bin/ibox`）；旧名软链可选保留。**Windows**：PowerShell 跑 `install.ps1` 后重开终端。
-6. 试：`ibox`（开场指南）、`ibox how 查端口占用`、`ibox add "记一笔"`、`ibox find --in log "连接被拒绝" -p app.log`、`ibox hi`。
+- 8 条 golden queries 全部通过：本地已满足。
+- 命令卡名称唯一、必需字段完整：本地已满足。
+- HTML 本地链接无失效目标：本地已满足。
+- macOS / Windows / Linux CI 通过：已满足（run `34424799213`）。
+- README / STATUS 与实际能力一致：本轮已校正，**但需在 ADR-002 落稿后重新确认**（用户面入口已改变）。
+- Windows PowerShell 真人安装验收：待完成（且需覆盖 `ibox` 与 Windows 翻页修复）。

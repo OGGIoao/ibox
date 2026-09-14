@@ -70,7 +70,7 @@
 | 数据域层 | `~/terminal-toolbox/tk` + `tkcore.py` | 笔记/日志/提交/剪贴板/待办 的采集与语义引擎 |
 | 全局命令 | `~/bin/ibox`（软链） | 任意目录敲 `ibox` 都行 |
 | 短名别名 | `~/.cheat.zsh`（由 `~/.zshrc` source） | `alias c='ibox'` |
-| 数据源 | `~/.config/cheat/cheatsheet.md` | 48 张命令卡（含 8 张 ollama），所见即所得 |
+| 数据源 | `~/.config/cheat/cheatsheet.md` | 49 张命令卡（含 8 张 ollama），所见即所得 |
 | 个人数据 | `~/.config/cheat/.tk_*.jsonl` | note / todo / clip 的记录 |
 | 学习与缓存 | `~/.config/cheat/.pycheat_*.json` | 自学习说法库、复习曲线、卡片向量缓存 |
 
@@ -139,7 +139,7 @@ ibox done a3f21c                    # 标记完成
 
 浏览键位：`n`/`→` 下一张 · `p`/`←` 上一张 · `b` 回退 · `f` 前进 · `c` 复制示例 · `/` 重新搜索 · `q` 退出。
 
-> 「`/` 重新搜索」搜的是**全量 48 张卡**，不是当前结果集——翻了几张再搜也不会被范围困住。
+> 「`/` 重新搜索」搜的是**全量 49 张卡**，不是当前结果集——翻了几张再搜也不会被范围困住。
 
 ---
 

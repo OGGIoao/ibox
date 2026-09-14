@@ -1,0 +1,45 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  baseline:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.9"
+      - name: Compile Python sources
+        run: python -m compileall -q terminal-toolbox scripts tests
+      - name: Run tests
+        run: python -m unittest discover -s tests -v
+      - name: Check HTML links
+        run: python scripts/check_html_links.py
+      - name: Test Windows command wrappers
+        if: runner.os == 'Windows'
+        shell: cmd
+        run: |
+          terminal-toolbox\pycheat.cmd --no-llm --list
+          terminal-toolbox\tk.cmd --help
+      - name: Parse Windows installer
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $tokens = $null
+          $errors = $null
+          [System.Management.Automation.Language.Parser]::ParseFile(
+            (Resolve-Path 'terminal-toolbox/install.ps1'),
+            [ref]$tokens,
+            [ref]$errors
+          ) | Out-Null
+          if ($errors.Count -gt 0) {
+            $errors | ForEach-Object { Write-Error $_.Message }
+            exit 1
+          }

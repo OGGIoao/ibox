@@ -100,7 +100,7 @@
     <span class="name">场务</span>
   </div>
   <div class="dialogue" id="dlg"><span class="cursor"></span></div>
-  <div class="nav"><a href="10-时序引入-交互版.html">‹ 上一页</a><a href="../逻辑电路卷目录.html">目录</a><a href="12-D触发器-交互版.html">下一页 ›</a></div>
+  <div class="nav"><a href="10-时序引入-交互版.html">‹ 上一页</a><a href="../../逻辑电路卷目录.html">目录</a><a href="../../逻辑电路卷目录.html">本卷目录 ›</a></div>
   <div class="action" id="cont">Action ▸</div>
 </div>
 <script>
@@ -154,7 +154,7 @@ async function goStep(n){
   else if(n===8){clearAll();applyLatch(0,0);setSpeaker('staff','场务');await type('但电平触发有个毛病：Set 一直为 1，状态就一直被“钉”着，容易误动作。下一场改成只在时钟跳变那一刻存。');cont.textContent='Action · 下一场 ▸';}
   if(n<8)cont.classList.add('show');
 }
-function advance(){if(typing){typing=false;dlg.innerHTML=curText+'<span class="cursor"></span>';if(pending){pending();pending=null;}return;}if(step<8){step++;goStep(step);}else{window.location.href='12-D触发器-交互版.html';}}
+function advance(){if(typing){typing=false;dlg.innerHTML=curText+'<span class="cursor"></span>';if(pending){pending();pending=null;}return;}if(step<8){step++;goStep(step);}else{window.location.href='../../逻辑电路卷目录.html';}}
 function reset(){step=0;typing=false;pending=null;curText='';state.Q=0;state.Qp=1;state.S=0;state.R=0;clearAll();applyLatch(0,0);setSpeaker('staff','场务');dlg.innerHTML='<span class="cursor"></span>';cont.textContent='喊 Action 开拍 ▸';cont.classList.add('show');}
 document.addEventListener('click',advance);
 document.addEventListener('keydown',e=>{if(e.code==='Space'||e.code==='Enter'||e.code==='ArrowRight'){e.preventDefault();advance();}else if(e.code==='Backspace'||e.code==='ArrowLeft'){e.preventDefault();reset();}});
