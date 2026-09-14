@@ -1,0 +1,418 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""ibox — 个人终端工具箱（统一入口）
+
+一个名字 + 按「你要干什么」分的子命令，取代此前分散的 c / pycheat / tk / hi / gup：
+
+  ibox how  <说法>              查命令怎么用（说人话搜命令卡）
+  ibox find [--in 域] <说法>     在你的数据里搜（域: note / log / git / clip / todo）
+  ibox add  <文本>              记一条（默认快记；--in todo 加任务；--clip 记剪贴板）
+  ibox done <id>                把任务标记完成（id 见 ibox find --in todo 的输出）
+  ibox ask  <文本> | --sum      问本地模型（解释命令；--sum 摘要长文本 / 文件 / 管道）
+  ibox hi                       我在哪台机器
+  ibox sync                     一键 git 同步（当前仓库）
+  ibox                          （无参数）开场屏：完整使用指南
+
+不推倒重来的做法（避免「板块越开越多」）：
+  - 「怎么用」直接复用 pycheat 的检索 / 卡面渲染 / 浏览（import，不复制代码）
+  - 「我的数据」直接复用 tk 的域采集函数（动态加载无后缀脚本，不复制代码）
+  - 引擎统一走 tkcore（融合排序 + ollama 零依赖调用）
+  - 旧名 c / pycheat / tk / hi / gup 全部保留为兼容入口，肌肉记忆不破坏
+
+  → 本文件只做「参数转发 + 开场指南 + hi/sync 两处跨平台移植」，是薄壳，不是新引擎。
+"""
+import datetime
+import getpass
+import os
+import platform
+import socket
+import subprocess
+import sys
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+if HERE not in sys.path:
+    sys.path.insert(0, HERE)
+
+import tkcore as T  # noqa: E402  共享引擎（融合排序 / 向量缓存 / 生成）
+
+# 数据域 → 旧 tk 子命令名（域逻辑留在 tk，ibox 只转发参数）
+_DOMAINS = {"note": "note", "log": "log", "git": "gitx", "clip": "clip", "todo": "todo"}
+
+
+# ============ 复用既有入口（不复制代码） ============
+def _run_pycheat(argv):
+    """转调 pycheat 的主流程：复用其搜索、卡面渲染、浏览键位与全部 flag。"""
+    import pycheat as P
+    saved = sys.argv
+    sys.argv = ["pycheat"] + list(argv)
+    try:
+        P.main()
+    finally:
+        sys.argv = saved
+
+
+def _tk_module():
+    """动态加载无后缀的 tk 脚本，复用它的全部域函数（note_add / log_search / ...）。"""
+    import importlib.machinery
+    import importlib.util
+    path = os.path.join(HERE, "tk")
+    loader = importlib.machinery.SourceFileLoader("_ibox_tk", path)
+    spec = importlib.util.spec_from_loader("_ibox_tk", loader)
+    mod = importlib.util.module_from_spec(spec)
+    loader.exec_module(mod)
+    return mod
+
+
+def _run_tk(argv):
+    """转调 tk 主流程（域采集与打印都在 tk 里，此处只转发参数）。"""
+    mod = _tk_module()
+    saved = sys.argv
+    sys.argv = ["tk"] + list(argv)
+    try:
+        mod.main()
+    finally:
+        sys.argv = saved
+
+
+def _split_opts(argv, flags_with_value=(), bool_flags=()):
+    """手工分流选项与位置参数，返回 (opts, positional)；出错返回 (None, None)。
+
+    刻意不用 argparse：`ibox ask tar -xzf` 里的 -xzf 会被 argparse 当成选项而报错，
+    而这里要求「原样透传」，自己分流更可靠。支持 `--in note` 与 `--in=note` 两种写法。
+    """
+    opts, pos, i = {}, [], 0
+    while i < len(argv):
+        a = argv[i]
+        if a in bool_flags:
+            opts[a] = True
+            i += 1
+        elif a in flags_with_value:
+            if i + 1 >= len(argv):
+                print("⚠️ 选项 %s 缺少取值" % a)
+                return None, None
+            opts[a] = argv[i + 1]
+            i += 2
+        elif a.startswith("--") and "=" in a and a.split("=", 1)[0] in flags_with_value:
+            k, v = a.split("=", 1)
+            opts[k] = v
+            i += 1
+        else:
+            pos.append(a)
+            i += 1
+    return opts, pos
+
+
+# ============ how：查命令怎么用（原 c / pycheat） ============
+def cmd_how(argv):
+    """全部参数原样交给 pycheat（-c 复制 / -l 列全部 / --llm 语义 / 直接给说法）。"""
+    _run_pycheat(argv)
+
+
+# ============ find：在你的数据里搜（原 tk 的 5 个检索域） ============
+def cmd_find(argv):
+    opts, pos = _split_opts(argv, flags_with_value=("--in", "-p", "--path", "-r", "--repo"))
+    if opts is None:
+        return
+    dom = (opts.get("--in") or "note").strip()
+    if dom not in _DOMAINS:
+        print("⚠️ 未知数据源「%s」；可选：%s" % (dom, " / ".join(_DOMAINS)))
+        return
+    if not pos:
+        # 无关键词：note / todo / clip 支持列出全部；log / git 需要关键词
+        if dom in ("note", "todo", "clip"):
+            _run_tk([_DOMAINS[dom]])
+        elif dom == "log":
+            print("用法：ibox find --in log \"要找的报错\" -p 日志文件或目录")
+        else:
+            print("用法：ibox find --in git \"想找的提交\" -r 仓库路径")
+        return
+    argv2 = [_DOMAINS[dom]] + pos
+    path = opts.get("-p") or opts.get("--path")
+    repo = opts.get("-r") or opts.get("--repo")
+    if path:
+        argv2 += ["-p", path]
+    if repo:
+        argv2 += ["-r", repo]
+    _run_tk(argv2)
+
+
+# ============ add：记一条 ============
+def cmd_add(argv):
+    opts, pos = _split_opts(argv, flags_with_value=("--in", "-t", "--tag"), bool_flags=("--clip",))
+    if opts is None:
+        return
+    if opts.get("--clip"):
+        _run_tk(["clip", "-r"])
+        return
+    text = " ".join(pos).strip()
+    if not text:
+        print("用法：ibox add \"要记的内容\"            记一条快记")
+        print("      ibox add \"周五交报告\" --in todo  加个任务")
+        print("      ibox add --clip                   记下当前剪贴板")
+        return
+    dom = (opts.get("--in") or "note").strip()
+    if dom not in ("note", "todo"):
+        print("⚠️ add 只支持 --in note 或 --in todo（当前：%s）" % dom)
+        return
+    base = "todo" if dom == "todo" else "note"
+    argv2 = [base, "-a", text]
+    tag = opts.get("-t") or opts.get("--tag")
+    if tag:
+        argv2 += ["-t", tag]
+    _run_tk(argv2)
+
+
+# ============ done：标记任务完成 ============
+def cmd_done(argv):
+    if not argv:
+        print("用法：ibox done <id>")
+        print("      id 见 `ibox find --in todo` 每行开头的 [xxxxxx]")
+        return
+    _run_tk(["todo", "-d", argv[0]])
+
+
+# ============ ask：问本地模型（原 explain / sum） ============
+def cmd_ask(argv):
+    opts, pos = _split_opts(argv, flags_with_value=("-f", "--file"), bool_flags=("--sum",))
+    if opts is None:
+        return
+    f = opts.get("-f") or opts.get("--file")
+    if opts.get("--sum") or f:
+        argv2 = ["sum"] + (["-f", f] if f else [])
+        _run_tk(argv2)
+        return
+    text = " ".join(pos).strip()
+    if not text:
+        print("用法：ibox ask <命令或文本>            解释它是什么（需本机有 chat 模型）")
+        print("      ibox ask --sum -f 日志.txt       摘要长文本")
+        print("      cat 日志.txt | ibox ask --sum    从管道摘要")
+        return
+    _run_tk(["explain", text])
+
+
+# ============ hi：我在哪台机器（原 hi.sh 的 Python 版，跨平台） ============
+def _os_string():
+    if sys.platform == "darwin":
+        try:
+            name = subprocess.check_output(["sw_vers", "-productName"], text=True).strip()
+            ver = subprocess.check_output(["sw_vers", "-productVersion"], text=True).strip()
+            return "%s %s" % (name, ver)
+        except Exception:
+            pass
+    return "%s %s" % (platform.system(), platform.release())
+
+
+def _uptime():
+    if sys.platform == "win32":
+        try:
+            import ctypes
+            secs = ctypes.windll.kernel32.GetTickCount64() // 1000
+            d, rem = divmod(secs, 86400)
+            h, rem = divmod(rem, 3600)
+            return "已运行 %d 天 %d 小时 %d 分" % (d, h, rem // 60)
+        except Exception:
+            return "（未知）"
+    try:
+        return subprocess.check_output(["uptime"], text=True).strip()
+    except Exception:
+        return "（未知）"
+
+
+def _chip_and_mem():
+    """芯片型号 + 内存总量（macOS 用 sysctl，Windows 用 ctypes，Linux 读 /proc）。"""
+    if sys.platform == "darwin":
+        try:
+            chip = subprocess.check_output(
+                ["sysctl", "-n", "machdep.cpu.brand_string"], text=True).strip()
+        except Exception:
+            chip = platform.processor() or "未知芯片"
+        try:
+            b = int(subprocess.check_output(["sysctl", "-n", "hw.memsize"], text=True).strip())
+            return chip, "%.0fGB 统一内存" % (b / 1024 ** 3)
+        except Exception:
+            return chip, "内存未知"
+    if sys.platform == "win32":
+        chip = platform.processor() or "未知芯片"
+        try:
+            import ctypes
+
+            class _MS(ctypes.Structure):
+                _fields_ = [("dwLength", ctypes.c_ulong),
+                            ("dwMemoryLoad", ctypes.c_ulong),
+                            ("ullTotalPhys", ctypes.c_ulonglong),
+                            ("ullAvailPhys", ctypes.c_ulonglong),
+                            ("ullTotalPageFile", ctypes.c_ulonglong),
+                            ("ullAvailPageFile", ctypes.c_ulonglong),
+                            ("ullTotalVirtual", ctypes.c_ulonglong),
+                            ("ullAvailVirtual", ctypes.c_ulonglong),
+                            ("ullAvailExtendedVirtual", ctypes.c_ulonglong)]
+
+            ms = _MS()
+            ms.dwLength = ctypes.sizeof(_MS)
+            ctypes.windll.kernel32.GlobalMemoryStatusEx(ctypes.byref(ms))
+            return chip, "%.0fGB 内存" % (ms.ullTotalPhys / 1024 ** 3)
+        except Exception:
+            return chip, "内存未知"
+    chip = platform.processor() or "未知芯片"
+    try:
+        with open("/proc/meminfo", encoding="utf-8") as f:
+            for line in f:
+                if line.startswith("MemTotal"):
+                    return chip, "%.0fGB 内存" % (int(line.split()[1]) / 1024 ** 2)
+    except OSError:
+        pass
+    return chip, "内存未知"
+
+
+def cmd_hi(argv):
+    me = os.environ.get("USER") or os.environ.get("USERNAME") or getpass.getuser()
+    host = socket.gethostname().split(".")[0]
+    print("👋  hi, %s @ %s" % (me, host))
+    print("🖥   %s  (%s)" % (_os_string(), platform.machine()))
+    print("⏱   %s" % _uptime())
+    if argv and argv[0] in ("-v", "--verbose"):
+        chip, mem = _chip_and_mem()
+        print("🔩  %s  ·  %s" % (chip, mem))
+
+
+# ============ sync：一键 git 同步（原 gup.sh 的 Python 版） ============
+def cmd_sync(argv):
+    """把当前 git 仓库的改动提交并推送。
+
+    安全底线照搬 gup.sh：只在当前仓库内操作、绝不 rm / reset、先 --ff-only pull、
+    无改动直接退出、无 remote 只做本地提交。
+    （提交范围沿用原行为 `git add -A`；如需收紧为「只提交指定文件」，改这一行即可。）
+    """
+    def run(*cmd, **kw):
+        return subprocess.run(cmd, text=True, **kw)
+
+    quiet = dict(stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    if run("git", "rev-parse", "--is-inside-work-tree", **quiet).returncode != 0:
+        print("❌ 当前目录不是 git 仓库。请先 cd 到仓库根目录再跑 ibox sync。")
+        return
+    root = subprocess.check_output(["git", "rev-parse", "--show-toplevel"], text=True).strip()
+    os.chdir(root)
+    try:
+        branch = subprocess.check_output(["git", "symbolic-ref", "--short", "HEAD"],
+                                         text=True, stderr=subprocess.DEVNULL).strip()
+    except subprocess.CalledProcessError:
+        branch = "(游离 HEAD)"
+    print("📁 仓库: %s  (分支: %s)" % (root, branch))
+
+    has_remote = bool(subprocess.check_output(["git", "remote"], text=True).strip())
+
+    if not subprocess.check_output(["git", "status", "--porcelain"], text=True).strip():
+        print("✅ 没有改动，无需提交。")
+        if has_remote:
+            run("git", "fetch", "--quiet", **quiet)
+        return
+
+    print("📦 将提交以下改动（M 改 / A 加 / D 删 / ?? 未跟踪）：")
+    print(subprocess.check_output(["git", "status", "--short"], text=True).rstrip())
+
+    if has_remote:
+        print("⬇️  先 git pull --ff-only ...")
+        if run("git", "pull", "--ff-only").returncode != 0:
+            print("⚠️  pull 失败或冲突。请手动 git pull 解决后再跑 ibox sync。")
+            return
+
+    run("git", "add", "-A")
+    msg = "auto: 同步于 " + datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
+    if run("git", "commit", "-m", msg, **quiet).returncode != 0:
+        print("⚠️  提交失败（可能没有可提交的内容）。")
+        return
+    print("✅ 已提交: %s" % msg)
+
+    if not has_remote:
+        print("ℹ️  没有配置 remote，仅完成本地提交。")
+        print("✅ 完成。")
+        return
+    has_up = run("git", "rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{u}",
+                 **quiet).returncode == 0
+    if not has_up:
+        print("ℹ️  当前分支 '%s' 没有 upstream，未自动推送。" % branch)
+        print("    首次推送请手动：git push -u origin %s" % branch)
+        print("✅ 完成。")
+        return
+    if run("git", "push").returncode != 0:
+        print("⚠️  push 失败（可能被拒绝）。先手动 git pull 合并后再跑 ibox sync。")
+        return
+    print("⬆️  已推送。")
+    print("✅ 完成。")
+
+
+# ============ 开场屏：直接写成使用指南 ============
+def show_guide():
+    """无参数时的开场屏。刻意把所有子命令和最常见用法列全——一次记住不容易，
+    但每次敲 ibox 都能看到，看几次就会了。"""
+    import pycheat as P
+    B, R, D = P.BOLD, P.R, P.DIM
+    C, G, Y, M = P.CYAN, P.GREEN, P.YELLOW, P.MAG
+    bo = P.BORD
+
+    print(bo + "╭─ " + R + B + "ibox · 个人终端工具箱" + R + bo + " " + "─" * 28 + R)
+    print(bo + "│" + R)
+    print(bo + "│ " + R + C + "说人话就能用，不必记命令名。" + R)
+    print(bo + "│" + R)
+    print(bo + "│ " + R + M + "查询" + R)
+    print(bo + "│   " + R + G + "ibox how " + R + "端口占用          " + D + "查命令怎么用" + R)
+    print(bo + "│   " + R + G + "ibox find " + R + "部署报错         " + D + "在你的笔记 / 日志 / 提交里搜" + R)
+    print(bo + "│" + R)
+    print(bo + "│ " + R + M + "记录" + R)
+    print(bo + "│   " + R + G + "ibox add " + R + "\"改 ssh 端口\"      " + D + "记一条快记" + R)
+    print(bo + "│   " + R + G + "ibox add " + R + "\"周五交报告\" --in todo" + R)
+    print(bo + "│   " + R + G + "ibox done " + R + "a3f21c          " + D + "把任务标记完成" + R)
+    print(bo + "│" + R)
+    print(bo + "│ " + R + M + "问 / 机器 / 同步" + R)
+    print(bo + "│   " + R + G + "ibox ask " + R + "tar -xzf         " + D + "命令翻人话（需 chat 模型）" + R)
+    print(bo + "│   " + R + G + "ibox hi" + R + "                        " + D + "我在哪台机器" + R)
+    print(bo + "│   " + R + G + "ibox sync" + R + "                      " + D + "一键 git 同步" + R)
+    print(bo + "│" + R)
+    print(bo + "│ " + R + M + "换数据源 / 更多" + R)
+    print(bo + "│   " + R + Y + "--in note|log|git|clip|todo" + R + "  " + D + "find 的数据源（默认 note）" + R)
+    print(bo + "│   " + R + Y + "ibox find --in log \"拒绝\" -p app.log" + R)
+    print(bo + "│   " + R + Y + "ibox how -l" + R + "                     " + D + "列出全部命令卡" + R)
+    print(bo + "│   " + R + Y + "ibox add --clip" + R + "                  " + D + "记下当前剪贴板" + R)
+    print(bo + "│" + R)
+    print(bo + "│ " + R + D + "旧名 c / pycheat / tk / hi / gup 仍可用（内部转调本工具）" + R)
+    if T.ollama_available():
+        print(bo + "│ " + R + D + "🧠 语义检索已启用（ollama · %s）" % T.resolve_embed_model() + R)
+    else:
+        print(bo + "│ " + R + D + "💤 语义检索未启用（启动 ollama serve 可增强近义命中）" + R)
+    print(bo + "└" + "─" * 58 + R)
+
+
+# ============ 入口 ============
+_KNOWN = ("how", "find", "add", "done", "ask", "hi", "sync", "help")
+
+
+def main():
+    argv = sys.argv[1:]
+    if not argv:
+        show_guide()
+        return
+    cmd, rest = argv[0], argv[1:]
+    if cmd in ("-h", "--help", "help"):
+        show_guide()
+        return
+    if cmd not in _KNOWN:
+        # 不是子命令 → 整体当作 how 查询，兼容 `c 端口占用` 的肌肉记忆
+        cmd, rest = "how", argv
+    if cmd == "how":
+        cmd_how(rest)
+    elif cmd == "find":
+        cmd_find(rest)
+    elif cmd == "add":
+        cmd_add(rest)
+    elif cmd == "done":
+        cmd_done(rest)
+    elif cmd == "ask":
+        cmd_ask(rest)
+    elif cmd == "hi":
+        cmd_hi(rest)
+    elif cmd == "sync":
+        cmd_sync(rest)
+
+
+if __name__ == "__main__":
+    main()

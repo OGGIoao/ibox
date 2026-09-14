@@ -55,6 +55,14 @@ def _stamp():
     return _now().strftime("%Y%m%d-%H%M%S") + "-" + uuid.uuid4().hex[:6]
 
 
+def _short_id(full):
+    """显示用短 id：取 uuid 后缀（唯一、好敲）。20260914-104312-a3f21c → a3f21c。
+
+    此前列表只打印内容、不打印 id，而 done 却要求传 id —— 用户无从得知该填什么。
+    """
+    return full.split("-")[-1] if full and "-" in full else (full or "")
+
+
 def _iso():
     return _now().isoformat(" ", "seconds")
 
@@ -69,7 +77,7 @@ def note_add(text, tags):
 def note_search(q):
     items = _load_jsonl(NOTE_PATH)
     if not items:
-        print("（还没有任何快记，先用 `tk note -a \"...\"`）")
+        print("（还没有任何快记，先用 `ibox add \"...\"`）")
         return
     units = [{"key": it["id"], "name": it.get("text", "")[:40],
               "text": it.get("text", ""), "aliases": it.get("tags", [])} for it in items]
@@ -83,7 +91,7 @@ def note_search(q):
     for u in res[:10]:
         it = next(i for i in items if i["id"] == u["key"])
         tagstr = ("  #" + " #".join(it.get("tags", []))) if it.get("tags") else ""
-        print("• " + it.get("text", "") + tagstr)
+        print("• [%s] %s%s" % (_short_id(it.get("id", "")), it.get("text", ""), tagstr))
         print("  " + it.get("ts", ""))
 
 
@@ -131,7 +139,7 @@ def _scan_logs(pathspec):
 def log_search(q, pathspec):
     units = _scan_logs(pathspec)
     if not units:
-        print("（没找到 .log 文件，试试 `tk log <query> -p /path/to/file.log`）")
+        print("（没找到 .log 文件，试试 `ibox find --in log \"关键词\" -p /path/to/file.log`）")
         return
     res = T.fused_rank(units, q, "log")
     if not res:
@@ -215,12 +223,12 @@ def clip_search(q):
             return
     else:
         if not units:
-            print("（剪贴板历史为空，先 `tk clip -r` 记录，或 `tk clip` 搜当前）")
+            print("（剪贴板历史为空，先 `ibox add --clip` 记录，或 `ibox find --in clip` 搜历史）")
             return
         res = sorted(units, key=lambda u: u["key"], reverse=True)
     for u in res[:10]:
         it = next(i for i in items if i["id"] == u["key"])
-        print("• " + it.get("text", "")[:200])
+        print("• [%s] %s" % (_short_id(it.get("id", "")), it.get("text", "")[:200]))
         print("  " + it.get("ts", ""))
 
 
@@ -256,13 +264,13 @@ def todo_search(q):
             return
     else:
         if not units:
-            print("（没有未完成任务，用 `tk todo -a \"...\"` 添加）")
+            print("（没有未完成任务，用 `ibox add \"...\" --in todo` 添加）")
             return
         res = sorted(units, key=lambda u: u["key"], reverse=True)
     for u in res[:20]:
         it = next(i for i in items if i["id"] == u["key"])
         tagstr = ("  #" + " #".join(it.get("tags", []))) if it.get("tags") else ""
-        print("• [ ] " + it.get("text", "") + tagstr)
+        print("• [%s] [ ] %s%s" % (_short_id(it.get("id", "")), it.get("text", ""), tagstr))
 
 
 # ---------- explain / sum：本地 ollama 生成 ----------
@@ -335,8 +343,16 @@ def main():
     ps.add_argument("-f", "--file", default="-", help="输入文件（默认 stdin）")
 
     args = p.parse_args()
-    # 启动期探测：ollama 没跑/不健康时，跨语言与弱信号查询会退回纯离线（中文→英文等会不准）
-    if args.cmd in ("note", "log", "gitx", "clip", "todo") and not T.ollama_available():
+    # 启动期探测：ollama 没跑/不健康时，跨语言与弱信号查询会退回纯离线（中文→英文等会不准）。
+    # 只在「检索」动作提示；add / record / done 不涉及语义检索，不必打扰（此前一律提示，噪音大）。
+    _is_search = (
+        (args.cmd == "note" and not args.add)
+        or args.cmd == "log"
+        or args.cmd == "gitx"
+        or (args.cmd == "clip" and not args.record)
+        or (args.cmd == "todo" and not args.add and not args.done)
+    )
+    if _is_search and not T.ollama_available():
         print("（⚠️ 本机 ollama 未运行/不健康，语义检索未生效；中文→英文等跨语言查询可能不准。启动 `ollama serve` 即可增强）")
     if args.cmd == "note":
         if args.add:

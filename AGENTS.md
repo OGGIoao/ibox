@@ -5,7 +5,7 @@
 
 ## 1. 这是什么
 
-- **个人终端工具箱**：一套自研 shell / Python CLI 小工具集合，命令行卡片「即查即用、意图式搜索」。
+- **个人终端工具箱**：一套自研 Python CLI 小工具集合，命令行卡片「即查即用、意图式搜索」。用户侧只有 **一个入口 `ibox`**（2026-09-14 起从 `c`/`pycheat`/`tk`/`hi`/`gup` 收敛而来，旧名保留为兼容壳）。
 - 公开仓库：`https://github.com/OGGIoao/terminal-list`
 - **真源原则**：本仓库是项目唯一真源。知识只存在于 `cheatsheet.md` 一份，代码与文档读取它，不复制维护两份。
 
@@ -13,11 +13,12 @@
 
 | 路径 | 内容 |
 |------|------|
-| `terminal-toolbox/pycheat.py` | 主搜索引擎（别名 `c`）：离线意图匹配 + ollama 融合语义检索 |
-| `terminal-toolbox/cheatsheet.md` | 数据源（知识真源），~48 张卡（含 8 张 ollama 卡） |
-| `terminal-toolbox/tk` + `tkcore.py` | 跨域套件：note / log / gitx / clip / todo / explain / sum |
-| `terminal-toolbox/*.cmd` + `install.ps1` | Windows 入口与一键安装 |
-| `terminal-toolbox/跨平台使用指南.md` · `pycheat-使用说明.md` · `tk-技术解读.md` | 文档 |
+| `terminal-toolbox/ibox` | **统一入口**（2026-09-14 起）：`how` / `find` / `add` / `done` / `ask` / `hi` / `sync` + 开场使用指南 |
+| `terminal-toolbox/pycheat.py` | 命令卡引擎（检索 / 卡面渲染 / 交互浏览），被 `ibox how` 复用 |
+| `terminal-toolbox/tk` + `tkcore.py` | 数据域层 + 共享引擎（note / log / gitx / clip / todo / explain / sum），被 `ibox` 复用 |
+| `terminal-toolbox/cheatsheet.md` | 数据源（知识真源），48 张卡（含 8 张 ollama 卡） |
+| `terminal-toolbox/ibox.cmd` / `pycheat.cmd` / `tk.cmd` + `install.ps1` | Windows 入口与一键安装 |
+| `terminal-toolbox/ibox-使用说明.md` · `跨平台使用指南.md` · `tk-技术解读.md` | 文档 |
 | `README.md` | 人类蓝图 |
 | `个人终端工具箱.md` | 活文档（工具卡 + 用法 + 路线图） |
 | `STATUS.md` / `MEMORY.md` | 当前状态 / 长期事实（本中枢） |
@@ -47,6 +48,9 @@
   - ollama 语义：本机 embeddings 向量化，`fused_rank()` 融合排序（本地分占主导 + 语义相似度相对归一到 [0,1] × `SEMANTIC_W=15` 温和加成）。
   - **铁律**：强本地命中永远压住语义；零本地分的近义卡才被语义抬出。**不要改成纯语义替换**——`nomic-embed-text` 是英文向模型，短中文区分度差（全挤 0.5–0.66），纯语义会把 `kill` 误排到 `type` 后面。这条坑已踩过，回归代价大。
 - `tkcore.py` 是 `tk` 套件的共享引擎，移植自 `pycheat`；**加新域 = 加一个适配器（采集函数），引擎不动**。
+- **入口分层（2026-09-14）**：用户面只有 `ibox` 一个入口，它是**薄壳不造新引擎**——
+  `how` 转调 `pycheat`、`find`/`add`/`done`/`ask` 转调 `tk`（动态加载无后缀脚本）、`hi`/`sync` 由 Python 实现（原 `hi.sh`/`gup.sh` 逻辑照搬，已跨平台）。
+  旧名 `c` / `pycheat` / `tk` / `hi` / `gup` 全部保留，内部转调 `ibox`；**改入口名不得破坏用户肌肉记忆**。
 
 ## 5. 记忆写入协议（所有 Agent 统一）
 
@@ -60,6 +64,7 @@
 
 - ⚠️ **不在公开仓库恢复 / 新增指向 iCloud 或其他私有路径的软链**（如 `AGENTS.md` → `iCloud/...`）。此前那份软链已移为 `.icloud.bak` 且不提交；本仓库现用自包含 `AGENTS.md` / `CLAUDE.md` / `STATUS.md` / `MEMORY.md`，已纳入 git。
 - 不复制 `cheatsheet.md` 内容进代码或文档做第二份维护（单一数据源纪律）。
+- ✅ **保持单入口**：新增能力请做成 `ibox` 的子命令，**不要再起新的顶层命令名**。用户面已从 5 个名字收敛到 1 个（`c`/`pycheat`/`tk`/`hi`/`gup` 各自为政就是反面教材）；用户明说「不想越来越臃肿」。
 - git 安全：只 add 明确涉及的文件；**绝不 `git rm` / `git reset --hard`**；个人目录操作走 `gup` 红线（ff-only，不 rm）。
 - 自动化数据 `~/.workbuddy/workbuddy.db` 绝不用 `rm` / `sqlite3` / shell 删，只用自动化管理工具。
 - 改排序 / 语义逻辑前，先读 `MEMORY.md` §2 与 `pycheat.py` 的 `fused_rank` 实现，避免回归纯语义翻车。

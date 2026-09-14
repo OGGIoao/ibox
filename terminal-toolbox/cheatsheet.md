@@ -5,7 +5,7 @@
 >   作用 / 用法 / 示例 / 踩坑 / Windows对照 / 来源卷
 > 新增命令 = 在文末加一个 `## 命令名` 区块即可，`cheat` 函数会自动识别。
 > 同步机制: 与 OS 课程文档双向引用——本文件是"即查即用"的精简版，文档是"讲透原理"的完整版。
-> 最后更新: 2026-08-28（初建含 0.0 硬件/第一卷内核/第二卷文件系统/第三卷Shell+自检三连；git 实战 8 张卡；ollama 指令 8 张卡：serve/pull/run/list/ps/rm/embeddings REST/show，供 pycheat --llm 语义检索；已拉 bge-m3 中文嵌入、pycheat 自动优先）
+> 最后更新: 2026-08-28（初建含 0.0 硬件/第一卷内核/第二卷文件系统/第三卷Shell+自检三连；git 实战 8 张卡；ollama 指令 8 张卡：serve/pull/run/list/ps/rm/embeddings REST/show，供 ibox --llm 语义检索；已拉 bge-m3 中文嵌入、ibox 自动优先）
 
 ---
 
@@ -357,7 +357,7 @@
 
 ## ollama serve
 - 别名: 启动ollama,开ollama服务,ollama后台,起服务
-- 作用: 启动 ollama 本地服务（默认监听 11434 端口），供 pycheat --llm 等本机程序调用
+- 作用: 启动 ollama 本地服务（默认监听 11434 端口），供 ibox --llm 等本机程序调用
 - 用法: `ollama serve` （后台常驻；macOS 也可用 `brew services start ollama` 开机自启）
 - 示例: `ollama serve &`  → 后台启动；`curl -s http://localhost:11434/api/tags` 验证在跑
 - 踩坑: 端口 11434 被占会起不来；`api/tags` 返回空 `{"models":[]}` 说明服务在跑但还没拉模型
@@ -368,11 +368,11 @@
 - 别名: 下载模型,拉模型,装模型,获取模型
 - 作用: 从模型库拉取模型到本机（首次使用某模型必须这一步）
 - 用法: `ollama pull <模型名>`
-- 示例: `ollama pull nomic-embed-text`  → 英文向向量模型（pycheat 默认语义底座，274MB）
-- 示例: `ollama pull bge-m3`            → 中文更强向量模型（约 1.2GB）；拉到后 pycheat --llm **自动优先**它
+- 示例: `ollama pull nomic-embed-text`  → 英文向向量模型（ibox 默认语义底座，274MB）
+- 示例: `ollama pull bge-m3`            → 中文更强向量模型（约 1.2GB）；拉到后 ibox --llm **自动优先**它
 - 示例: `ollama pull qwen2.5:0.5b`      → 轻量聊天模型，练手用
-- 示例: `ollama pull bge-m3` 后无需改配置，pycheat 的 `resolve_embed_model()` 检测到本机有 bge-m3 就切换
-- 踩坑: 模型名带标签，如 `qwen2.5:0.5b`；只写 `qwen2.5` 会拉默认标签 latest；向量模型(nomic/bge-m3)别乱删，pycheat 靠它
+- 示例: `ollama pull bge-m3` 后无需改配置，ibox 的 `resolve_embed_model()` 检测到本机有 bge-m3 就切换
+- 踩坑: 模型名带标签，如 `qwen2.5:0.5b`；只写 `qwen2.5` 会拉默认标签 latest；向量模型(nomic/bge-m3)别乱删，ibox 靠它
 - 踩坑: 网络中途掉线会断（如到 36%/87% 报 EOF），ollama 会缓存已下 blob **断点续传**，重试即可；极不稳时连 manifest 都拉不下，换网络/时段再试
 - Windows对照: 同
 - 来源卷: 工具箱·ollama
@@ -385,7 +385,7 @@
 - 示例(切换模型): `ollama run bge-m3` 不行（它是嵌入模型，不能对话）；对话用 qwen/llama 系列，嵌入用 nomic/bge-m3
 - 示例(对话中改参数): 进对话后 `/set parameter num_ctx 4096` 调上下文窗口；`/show` 看当前模型信息
 - 踩坑: 首次 run 会先下载，可能等一会儿；多轮对话占内存，0.5b 很轻，7b 以上注意 RAM
-- 踩坑: 嵌入模型和聊天模型是两回事——pycheat 用嵌入模型(nomic/bge-m3)，聊天请用 qwen2.5/llama 等
+- 踩坑: 嵌入模型和聊天模型是两回事——ibox 用嵌入模型(nomic/bge-m3)，聊天请用 qwen2.5/llama 等
 - Windows对照: 同
 - 来源卷: 工具箱·ollama
 
@@ -393,8 +393,8 @@
 - 别名: 看有哪些模型,模型列表,已装模型
 - 作用: 列出本机已拉取的模型
 - 用法: `ollama list`
-- 示例: `ollama list`  → 看 NAME / ID / SIZE / MODIFIED；出现 `bge-m3:latest` 即 pycheat 会自动优先它
-- 示例: 确认嵌入底座在位 —— 列表里应有 `nomic-embed-text` 或 `bge-m3`（pycheat 语义检索依赖其中之一）
+- 示例: `ollama list`  → 看 NAME / ID / SIZE / MODIFIED；出现 `bge-m3:latest` 即 ibox 会自动优先它
+- 示例: 确认嵌入底座在位 —— 列表里应有 `nomic-embed-text` 或 `bge-m3`（ibox 语义检索依赖其中之一）
 - 踩坑: 列表为空不代表服务没起，只是还没 pull 任何模型
 - Windows对照: 同
 - 来源卷: 工具箱·ollama
@@ -413,17 +413,17 @@
 - 作用: 删除本机模型，释放磁盘
 - 用法: `ollama rm <模型名>`
 - 示例: `ollama rm qwen2.5:0.5b`
-- 踩坑: 删除后下次 run 会重新下载（再等一次）；`nomic-embed-text` 是 pycheat 语义检索底座，别乱删
+- 踩坑: 删除后下次 run 会重新下载（再等一次）；`nomic-embed-text` 是 ibox 语义检索底座，别乱删
 - Windows对照: 同
 - 来源卷: 工具箱·ollama
 
 ## ollama embeddings (REST)
 - 别名: 向量化接口,embedding调用,语义向量,文本转向量
-- 作用: 用任意程序调 ollama 做文本向量化（pycheat --llm 就是这么干的）
+- 作用: 用任意程序调 ollama 做文本向量化（ibox --llm 就是这么干的）
 - 用法: POST http://localhost:11434/api/embeddings   body: {"model":...,"prompt":...}
 - 示例(nomic): `curl -s -X POST http://localhost:11434/api/embeddings -H "Content-Type: application/json" -d '{"model":"nomic-embed-text","prompt":"要向量化的文本"}'`
-- 示例(bge-m3): 同上把 model 换成 `bge-m3` 即可；bge-m3 中文区分度约 nomic 的 6~7 倍，pycheat 已自动优先
-- 示例(验证 pycheat 当前用哪个): `python3 -c "import sys;sys.path.insert(0,'~/terminal-toolbox');import pycheat;print(pycheat.resolve_embed_model())"`
+- 示例(bge-m3): 同上把 model 换成 `bge-m3` 即可；bge-m3 中文区分度约 nomic 的 6~7 倍，ibox 已自动优先
+- 示例(验证 ibox 当前用哪个): `python3 -c "import sys;sys.path.insert(0,'~/terminal-toolbox');import pycheat;print(pycheat.resolve_embed_model())"`
 - 踩坑: 返回 JSON 里的 `embedding` 字段是浮点数组（nomic-embed-text 768 维 / bge-m3 1024 维）；需先 `ollama pull` 对应模型
 - 踩坑: 向量缓存 `~/.config/cheat/.pycheat_vectors.json` 按「内容hash+模型名」存，换模型会自动重建，不会用错旧向量
 - Windows对照: 同（URL 不变，仍是本机 11434）
@@ -439,5 +439,5 @@
 - 踩坑: 模型名带标签时要写全，如 `qwen2.5:0.5b`，否则按 latest 解析
 - Windows对照: 同
 - 来源卷: 工具箱·ollama
-- 备注: 本卡为「自己加卡」功能的现场演示示例（见 pycheat-使用说明.md §7）
+- 备注: 本卡为「自己加卡」功能的现场演示示例（见 ibox-使用说明.md §7）
 - 来源卷: 工具箱·ollama

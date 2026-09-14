@@ -597,10 +597,34 @@ def list_all(cards):
         print("  %2d. %-24s %s" % (i, c["name"], c.get("作用", "")))
 
 
+def _read_key_windows():
+    """Windows 按键读取（msvcrt）。方向键是双字节前缀 \\x00 / \\xe0。"""
+    try:
+        import msvcrt
+    except ImportError:
+        return None
+    ch = msvcrt.getch()
+    if ch in (b"\x00", b"\xe0"):
+        ch2 = msvcrt.getch()
+        return {b"H": "up", b"P": "down", b"K": "left", b"M": "right"}.get(ch2, "esc")
+    if ch == b"\x03":  # Ctrl-C
+        raise KeyboardInterrupt
+    if ch == b"\x1b":
+        return "esc"
+    return ch.decode("utf-8", "ignore") or None
+
+
 def read_key():
-    """读一个按键（含方向键）。非交互终端返回 None。"""
+    """读一个按键（含方向键）。非交互终端返回 None。
+
+    平台分支：Windows 走 msvcrt，macOS/Linux 走 termios 原始模式。
+    此前只实现了 termios 一条路，Windows 上 import 直接失败返回 None，
+    导致 browse() 拿到 None 后立刻退出——只显示第一张卡。这是 Windows 交互失效的根因。
+    """
     if not sys.stdin.isatty():
         return None
+    if sys.platform == "win32":
+        return _read_key_windows()
     try:
         import tty
         import termios
@@ -675,10 +699,16 @@ def print_menu():
           " 重新搜索      " + BOLD + "q" + R + " 退出")
 
 
-def browse(order, start):
-    """交互浏览循环：渲染 + 底部菜单 + 翻页/回退/前进/复制/搜索，直到 q 退出。"""
+def browse(order, start, cards=None):
+    """交互浏览循环：渲染 + 底部菜单 + 翻页/回退/前进/复制/搜索，直到 q 退出。
+
+    cards 必须是「全量卡片」——按 / 重新搜索时以它为范围。此前误用 order
+    （当前结果集）作搜索范围：搜「端口」得 3 张后，翻到第 2 张按 / 搜「磁盘」，
+    只会在那 3 张里找。不传 cards 时退回用 order，保持脚本调用兼容。
+    """
     if not order:
         return
+    search_pool = cards if cards is not None else order
     idx = start
     hist, future = [], []
     tty = sys.stdout.isatty()
@@ -724,7 +754,7 @@ def browse(order, start):
             except (EOFError, KeyboardInterrupt):
                 break
             if q2:
-                r2 = search_rank(order, q2)
+                r2 = search_rank(search_pool, q2)
                 if r2:
                     hist.append(idx)
                     future.clear()
@@ -784,7 +814,7 @@ def show_opening(cards):
         if line == "":
             start = pick_card(cards)
             if start is not None:
-                browse(cards, start)
+                browse(cards, start, cards)
             continue
         if line == "?":
             print(DIM + "\n怎么用 pycheat：" + R)
@@ -800,7 +830,7 @@ def show_opening(cards):
         if line.isdigit():
             n = int(line) - 1
             if 0 <= n < len(pinned_names):
-                browse([c for c in cards if c["name"] == pinned_names[n]], 0)
+                browse([c for c in cards if c["name"] == pinned_names[n]], 0, cards)
                 continue
             print(DIM + "  ⚠️ 超出范围（1~%d）" % len(pinned_names) + R)
             continue
@@ -815,7 +845,7 @@ def show_opening(cards):
             except (EOFError, KeyboardInterrupt):
                 pass
             continue
-        browse(r, 0)
+        browse(r, 0, cards)
         continue
 
 
@@ -910,7 +940,7 @@ def main():
         return
 
     # 命中即进入浏览：从最佳卡开始，按相关度可继续翻看其它匹配
-    browse(ranked, 0)
+    browse(ranked, 0, cards)
 
 
 if __name__ == "__main__":

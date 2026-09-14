@@ -1,6 +1,6 @@
 # 个人终端工具箱 · Personal Terminal Toolbox
 
-> 👋 **接手本项目？** 按顺序读：[`AGENTS.md`](AGENTS.md) → [`STATUS.md`](STATUS.md) → [`MEMORY.md`](MEMORY.md) → 最近日记 `.workbuddy/memory/2026-09-05.md`。
+> 👋 **接手本项目？** 按顺序读：[`AGENTS.md`](AGENTS.md) → [`STATUS.md`](STATUS.md) → [`MEMORY.md`](MEMORY.md) → 最近日记（`.workbuddy/memory/`，本机私有记忆，clone 后没有属正常）。
 
 > 把我亲手用 shell / Python 造的命令行工具与脚本，沉淀成**可复用、可检索、可跨机器同步**的个人命令库。
 > 设计初衷：**你不用记命令名，只要会说"想做的事"**（中文 / 拼音 / 英文都行），工具替你找到该敲的那条。
@@ -9,7 +9,7 @@
 
 ## 这是什么
 
-一个"边学边造"的 terminal 工具箱。它既是**活文档**（每张卡记录一个工具的用途 / 用法 / 示例 / 通俗别名 / 踩坑 / 平台对照），也是**可运行的脚本集合**（`pycheat` / `hi` / `gup`）。
+一个"边学边造"的 terminal 工具箱。它既是**活文档**（每张卡记录一个工具的用途 / 用法 / 示例 / 通俗别名 / 踩坑 / 平台对照），也是**可运行的脚本集合**（统一入口 **`ibox`**：`how` / `find` / `add` / `done` / `ask` / `hi` / `sync`）。
 
 配套课程文档（也在此仓库，便于追溯背景）：
 - [`个人终端工具箱.md`](个人终端工具箱.md) — 本工具箱的说明书与成长路线图（工具卡 #1–#4 在此）
@@ -22,10 +22,12 @@
 
 | # | 工具 | 形态 | 一句话 |
 |---|------|------|--------|
-| 1 | `cheat`（✗ 已废弃） | zsh 函数 | **已由 `pycheat` 取代**（`c` 别名现指向 pycheat；敲错提示钩子改调 `pycheat --suggest`） |
-| 2 | `hi` | shell 脚本（`hi.sh`，软链 `~/bin/hi`） | 你是谁 / 在哪台机器 / 什么系统芯片，一眼看清 |
-| 3 | `gup` | shell 脚本（`gup.sh`，软链 `~/bin/gup`） | 一键 git 同步（pull ff-only → 提交 → push），安全红线不 rm/不 force |
-| 4 | `pycheat` | Python CLI（`pycheat.py`，软链 `~/bin/pycheat`） | 离线命令速查：开场屏（置顶+最近+↻该复习的）+ 人话搜索 + 自学习别名 + **本地 ollama 语义检索**(同义也能命中) + 彩色卡面 + 浏览不退出 |
+| ★ | **`ibox`** | Python CLI（`terminal-toolbox/ibox`，软链 `~/bin/ibox`；短名 `c`） | **统一入口**（2026-09-14 起）：`how` 查命令 · `find` 搜自己的数据 · `add` / `done` 记与完成任务 · `ask` 问本地模型 · `hi` 机器信息 · `sync` 一键 git 同步。直接敲 `ibox` 会打印完整使用指南 |
+| — | `cheat`（✗ 已废弃） | zsh 函数 | 已被取代（历史留档，见 `个人终端工具箱.md`） |
+| — | `hi`（`hi.sh`） | shell 脚本 | 已被 `ibox hi` 取代（Python 版，Windows 也能用） |
+| — | `gup`（`gup.sh`） | shell 脚本 | 已被 `ibox sync` 取代（Python 版，Windows 也能用） |
+| — | `pycheat`（`pycheat.py`） | Python CLI | 命令卡引擎，现被 `ibox how` 复用（旧名 `pycheat` / `c` 仍可用） |
+| — | `tk`（`tk` + `tkcore.py`） | Python CLI | 数据域层，现被 `ibox find` / `add` / `ask` 复用（旧名 `tk` 仍可用） |
 
 更完整的字段说明、截图式卡面示例，见 [`个人终端工具箱.md`](个人终端工具箱.md)。
 

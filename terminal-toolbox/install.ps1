@@ -5,8 +5,9 @@
 # 作用：
 #   1) 检查 Python（语义检索可选检查 ollama）
 #   2) 把工具箱目录加入「用户 PATH」（持久化，重启终端生效）
-#   3) 在 PowerShell $PROFILE 写入别名 c / pycheat / tk
-# 全程不修改系统盘以外的任何文件，可重复运行（幂等）。
+#   3) 在 PowerShell $PROFILE 写入别名块 ibox / c / pycheat / tk
+#      （首尾标记包裹：可重复运行，重复运行会原地升级，不堆叠重复定义）
+# 全程不修改系统盘以外的任何文件。
 
 $ErrorActionPreference = "Stop"
 $TB = $PSScriptRoot  # 本脚本所在目录，即工具箱根
@@ -46,33 +47,45 @@ if ($userPath -notlike "*$TB*") {
     Write-Host "✅ 工具箱目录已在用户 PATH 中" -ForegroundColor Green
 }
 
-# ---------- 4) 写 PowerShell 别名（幂等，不重复）----------
-$marker = "# terminal-toolbox aliases"
-$aliasBlock = @"
-
-$marker
-function c { python "$TB\pycheat.py" @args }
+# ---------- 4) 写 PowerShell 别名块（首尾标记 → 幂等且可原地升级）----------
+$begin = "# >>> terminal-toolbox aliases >>>"
+$end   = "# <<< terminal-toolbox aliases <<<"
+$block = @"
+$begin
+function ibox { python "$TB\ibox" @args }
+function c { python "$TB\ibox" @args }
 function pycheat { python "$TB\pycheat.py" @args }
 function tk { python -c "import runpy; runpy.run_path(r'$TB\tk', run_name='__main__')" @args }
+$end
 "@
+
 if (-not (Test-Path $PROFILE)) {
     New-Item -ItemType File -Path $PROFILE -Force | Out-Null
 }
 $existing = Get-Content $PROFILE -Raw -ErrorAction SilentlyContinue
-if ($existing -notmatch [regex]::Escape($marker)) {
-    Add-Content -Path $PROFILE -Value $aliasBlock
-    Write-Host "✅ 已在 $PROFILE 写入别名 c / pycheat / tk" -ForegroundColor Green
+if ($null -eq $existing) { $existing = "" }
+$pattern = "(?s)" + [regex]::Escape($begin) + ".*?" + [regex]::Escape($end)
+
+if ($existing -match $pattern) {
+    # 已有旧块 → 原地替换（保证重跑得到最新别名，不留残留定义）
+    $stripped = [regex]::Replace($existing, $pattern, "").TrimEnd()
+    if ([string]::IsNullOrEmpty($stripped)) { Set-Content -Path $PROFILE -Value $block }
+    else { Set-Content -Path $PROFILE -Value ($stripped + "`r`n`r`n" + $block) }
+    Write-Host "✅ 已更新 $PROFILE 中的别名块：ibox / c / pycheat / tk" -ForegroundColor Green
 } else {
-    Write-Host "✅ $PROFILE 已含 terminal-toolbox 别名（未重复写入）" -ForegroundColor Green
+    Add-Content -Path $PROFILE -Value "`r`n$block"
+    Write-Host "✅ 已在 $PROFILE 追加别名块：ibox / c / pycheat / tk" -ForegroundColor Green
 }
 
 Write-Host ""
 Write-Host "🎉 安装完成！请「重新打开 PowerShell」使 PATH 与别名生效，然后试试：" -ForegroundColor Cyan
-Write-Host "   c              # 进开场屏（推荐 / 复习 / 语义提示）" -ForegroundColor White
-Write-Host "   c 查端口占用    # 人话搜命令" -ForegroundColor White
-Write-Host "   c -c 关键词     # 复制示例到剪贴板" -ForegroundColor White
-Write-Host "   tk note 记一笔  # 终端快记本" -ForegroundColor White
+Write-Host "   ibox                 # 开场屏：使用指南全在里面" -ForegroundColor White
+Write-Host "   ibox how 查端口占用    # 人话搜命令（也可直接 c 查端口占用）" -ForegroundColor White
+Write-Host "   ibox find 部署报错     # 搜你自己的笔记 / 日志 / 提交" -ForegroundColor White
+Write-Host "   ibox add `"改 ssh 端口`"    # 记一条快记" -ForegroundColor White
+Write-Host "   ibox hi               # 我在哪台机器" -ForegroundColor White
 Write-Host ""
+Write-Host "c 是 ibox 的短别名；旧名 pycheat / tk 仍可用（内部转调 ibox）。" -ForegroundColor DarkGray
 Write-Host "数据同步：把 C:\Users\你\.config\cheat\cheatsheet.md 放进 OneDrive/iCloud 并双向同步，" -ForegroundColor DarkGray
 Write-Host "即可让 Windows 与 macOS 共享同一份命令卡（详见跨平台使用指南.md）。" -ForegroundColor DarkGray
 pause
