@@ -1,15 +1,18 @@
 # 我的终端命令速查 (cheatsheet)
 
-> 数据源: ~/WorkBuddy/2026-07-28-23-03-09/操作系统底层与终端精通课程.md
-> 维护规则: 每学完一卷，就把该卷的精选命令抽成下方"卡片"。卡片字段固定为六行：
->   作用 / 用法 / 示例 / 踩坑 / Windows对照 / 来源卷
-> 新增命令 = 在文末加一个 `## 命令名` 区块即可，`cheat` 函数会自动识别。
-> 同步机制: 与 OS 课程文档双向引用——本文件是"即查即用"的精简版，文档是"讲透原理"的完整版。
-> 最后更新: 2026-08-28（初建含 0.0 硬件/第一卷内核/第二卷文件系统/第三卷Shell+自检三连；git 实战 8 张卡；ollama 指令 8 张卡：serve/pull/run/list/ps/rm/embeddings REST/show，供 ibox --llm 语义检索；已拉 bge-m3 中文嵌入、ibox 自动优先）
+> **分类体系**：本文件按「功能域」分 7 区。每张卡带 `分类`（受控值，机器据此归位）与 `课卷`（对应 OS 课卷号，`-` 表示工具箱自带）。
+> **加卡规则**：新卡插到对应分类分区内，**不要甩到文件末尾**；分类值必须在词表内，否则 `ibox card check` 会报错。
+> **卡片字段**：分类 / 课卷 / 别名 / 作用 / 用法 / 示例 / 踩坑 / Windows对照 / 来源卷（来源卷为自由文本，保留安全视角与实战标记）。
+> 整理：2026-09-15 分类重构（56 张）。`ibox how` 读取本文件。
+
 
 ---
 
+# 1. 硬件与系统信息（8 张）
+
 ## uname
+- 分类: 硬件与系统信息
+- 课卷: 0
 - 别名: 看架构,芯片架构,系统架构,arch
 - 作用: 查看内核与硬件架构信息（跨平台通用）
 - 用法: uname [选项]
@@ -19,6 +22,8 @@
 - 来源卷: 0.0 硬件地基
 
 ## sysctl
+- 分类: 硬件与系统信息
+- 课卷: 0
 - 别名: 看cpu型号,cpu信息,cpu model
 - 作用: 读取 macOS/BSD 内核与硬件参数（macOS 独有）
 - 用法: sysctl [-n] 键名
@@ -28,6 +33,8 @@
 - 来源卷: 0.0 硬件地基
 
 ## system_profiler
+- 分类: 硬件与系统信息
+- 课卷: 0
 - 作用: 输出完整硬件/系统画像（macOS 独有，GUI"关于本机"的命令行版）
 - 用法: system_profiler <数据类型>
 - 示例: `system_profiler SPHardwareDataType` → 芯片/内存/序列号; `system_profiler SPSoftwareDataType` → 系统版本
@@ -36,6 +43,8 @@
 - 来源卷: 0.0 硬件地基
 
 ## vm_stat
+- 分类: 硬件与系统信息
+- 课卷: 0,1
 - 别名: 看内存,内存占用,内存不够,内存压力,neicun,memory
 - 作用: 实时看内存压力（页换入换出），对应 M 系列统一内存 UMA
 - 用法: vm_stat [间隔秒]
@@ -44,7 +53,10 @@
 - Windows对照: 任务管理器"性能→内存" 或 `typeperf`
 - 来源卷: 0.0 硬件地基 / 第一卷
 - 常用: 是
+
 ## powermetrics
+- 分类: 硬件与系统信息
+- 课卷: 0
 - 作用: 实时功耗/温度/各 CPU 核心负载（需 root）
 - 用法: sudo powermetrics [--samplers 项] [-n 次数]
 - 示例: `sudo powermetrics` → 滚屏输出（Ctrl+C 退出）; 看 CPU 各性能核/能效核占用
@@ -53,6 +65,8 @@
 - 来源卷: 0.0 硬件地基
 
 ## iostat
+- 分类: 硬件与系统信息
+- 课卷: 0
 - 别名: 磁盘io,磁盘读写,disk io
 - 作用: 磁盘 IO 吞吐监控
 - 用法: iostat [间隔] [次数]
@@ -61,52 +75,9 @@
 - Windows对照: 资源监视器→磁盘 或 `perfmon`
 - 来源卷: 0.0 硬件地基
 
-## top / htop
-- 别名: 看进程,哪个程序最占cpu,最占内存的进程,进程监控,实时进程,process
-- 作用: 实时进程监控（htop 是彩色增强版，需 brew 装）
-- 用法: top -o cpu ; htop
-- 示例: `top -o cpu` 按 CPU 排序; htop 里 F9 发信号、F4 过滤、F5 树状
-- 踩坑: top 默认交互；htop 不在系统自带，要 `brew install htop`；F9 杀进程前确认 PID
-- Windows对照: 任务管理器 / Process Explorer（Sysinternals）
-- 来源卷: 第一卷 内核与进程
-- 常用: 是
-## ps
-- 别名: 查进程,进程列表,看pid,进程快照,pid
-- 作用: 列出进程快照（非实时），看 PID/父PID/命令
-- 用法: ps aux ; ps -o pid,ppid,comm -p <PID>
-- 示例: `ps aux | head` 看全部; `ps -p 1 -o comm=` → launchd（确认 PID 1 是谁）
-- 踩坑: macOS 的 `ps aux` BSD 风格，与 Linux 略有差异；`ps -ef` 也通用
-- Windows对照: `tasklist` / `Get-Process`
-- 来源卷: 第一卷 内核与进程
-
-## lsof
-- 别名: 查端口占用,端口被谁占用,谁占了端口,监听端口,port,端口进程
-- 作用: 查看哪些进程打开了文件或占用了网络端口
-- 用法: lsof -i :<端口> ; lsof -iTCP -sTCP:LISTEN -n -P
-- 示例: `lsof -i :3000` → 找出占用 3000 端口的进程；`lsof -iTCP -sTCP:LISTEN -n -P` → 列出 TCP 监听端口
-- 踩坑: 查不到时可能需要 `sudo`；结束进程前先确认 PID 和程序身份，不要见端口就强杀
-- Windows对照: `netstat -ano | findstr :3000` 查 PID，再用 `tasklist /FI "PID eq <PID>"` 确认程序
-- 来源卷: 第二卷 文件系统 / 网络排障
-
-## kill
-- 别名: 杀进程,关掉程序,kill process
-- 作用: 向进程"发信号"（不是直接杀死），默认 SIGTERM(15) 温和请求退出
-- 用法: kill <PID> ; kill -9 <PID> ; kill -TERM <PID>
-- 示例: `kill 1234` 优雅退出; `kill -9 1234` 强杀（SIGKILL，进程来不及清理）
-- 踩坑: `-9` 是最后手段，会跳过清理导致数据丢失/僵尸；先试默认再 `-9`
-- Windows对照: `taskkill /PID 1234` / `/F` 强制
-- 来源卷: 第一卷 内核与进程
-
-## launchctl
-- 别名: 管后台服务,开机启动,服务管理
-- 作用: 与 macOS 的 init(PID 1, launchd) 交互：启停/加载服务、设环境变量
-- 用法: launchctl list ; launchctl load/unload <plist> ; launchctl setenv KEY val
-- 示例: `launchctl list | grep -i agent` 看用户级服务; `launchctl getenv PATH` 看 GUI 的 PATH
-- 踩坑: 改了 launchd 的环境变量要注销重登才生效；这是 GUI 应用 PATH 的来源（不读 .zshrc）
-- Windows对照: `sc`(服务控制) / 任务计划程序
-- 来源卷: 第一卷 / 第四卷(环境变量分裂)
-
 ## sw_vers
+- 分类: 硬件与系统信息
+- 课卷: 1
 - 别名: 看系统版本,系统版本,version
 - 作用: 查看 macOS 系统版本（macOS 独有）
 - 用法: sw_vers
@@ -116,6 +87,8 @@
 - 来源卷: 第一卷
 
 ## uptime
+- 分类: 硬件与系统信息
+- 课卷: 1
 - 作用: 看系统运行时长与平均负载（load average）
 - 用法: uptime
 - 示例: `uptime` → 运行天数 + 3 个负载数（1/5/15 分钟）；M 系列看核心数换算
@@ -123,7 +96,62 @@
 - Windows对照: 任务管理器"性能" 或 `systeminfo | find "Time"`
 - 来源卷: 第一卷
 
+---
+
+# 2. 进程与资源（4 张）
+
+## top / htop
+- 分类: 进程与资源
+- 课卷: 1
+- 别名: 看进程,哪个程序最占cpu,最占内存的进程,进程监控,实时进程,process
+- 作用: 实时进程监控（htop 是彩色增强版，需 brew 装）
+- 用法: top -o cpu ; htop
+- 示例: `top -o cpu` 按 CPU 排序; htop 里 F9 发信号、F4 过滤、F5 树状
+- 踩坑: top 默认交互；htop 不在系统自带，要 `brew install htop`；F9 杀进程前确认 PID
+- Windows对照: 任务管理器 / Process Explorer（Sysinternals）
+- 来源卷: 第一卷 内核与进程
+- 常用: 是
+
+## ps
+- 分类: 进程与资源
+- 课卷: 1
+- 别名: 查进程,进程列表,看pid,进程快照,pid
+- 作用: 列出进程快照（非实时），看 PID/父PID/命令
+- 用法: ps aux ; ps -o pid,ppid,comm -p <PID>
+- 示例: `ps aux | head` 看全部; `ps -p 1 -o comm=` → launchd（确认 PID 1 是谁）
+- 踩坑: macOS 的 `ps aux` BSD 风格，与 Linux 略有差异；`ps -ef` 也通用
+- Windows对照: `tasklist` / `Get-Process`
+- 来源卷: 第一卷 内核与进程
+
+## kill
+- 分类: 进程与资源
+- 课卷: 1
+- 别名: 杀进程,关掉程序,kill process
+- 作用: 向进程"发信号"（不是直接杀死），默认 SIGTERM(15) 温和请求退出
+- 用法: kill <PID> ; kill -9 <PID> ; kill -TERM <PID>
+- 示例: `kill 1234` 优雅退出; `kill -9 1234` 强杀（SIGKILL，进程来不及清理）
+- 踩坑: `-9` 是最后手段，会跳过清理导致数据丢失/僵尸；先试默认再 `-9`
+- Windows对照: `taskkill /PID 1234` / `/F` 强制
+- 来源卷: 第一卷 内核与进程
+
+## launchctl
+- 分类: 进程与资源
+- 课卷: 1,4
+- 别名: 管后台服务,开机启动,服务管理
+- 作用: 与 macOS 的 init(PID 1, launchd) 交互：启停/加载服务、设环境变量
+- 用法: launchctl list ; launchctl load/unload <plist> ; launchctl setenv KEY val
+- 示例: `launchctl list | grep -i agent` 看用户级服务; `launchctl getenv PATH` 看 GUI 的 PATH
+- 踩坑: 改了 launchd 的环境变量要注销重登才生效；这是 GUI 应用 PATH 的来源（不读 .zshrc）
+- Windows对照: `sc`(服务控制) / 任务计划程序
+- 来源卷: 第一卷 / 第四卷(环境变量分裂)
+
+---
+
+# 3. 文件与磁盘（8 张）
+
 ## ls
+- 分类: 文件与磁盘
+- 课卷: 2
 - 别名: 列文件,看目录内容,list
 - 作用: 列出目录内容
 - 用法: ls -la <路径> ; ls -l
@@ -133,6 +161,8 @@
 - 来源卷: 第二卷 文件系统
 
 ## mount
+- 分类: 文件与磁盘
+- 课卷: 2
 - 作用: 查看已挂载的文件系统及其类型/选项
 - 用法: mount ; mount | grep apfs
 - 示例: `mount | head` → 看 `/` 是 apfs, sealed, read-only（系统盘密封只读=SIP 体现）
@@ -141,6 +171,8 @@
 - 来源卷: 第二卷
 
 ## stat
+- 分类: 文件与磁盘
+- 课卷: 2
 - 作用: 查看文件的 inode/权限/大小/链接数等元数据
 - 用法: stat -f "格式串" <文件> (macOS BSD 风格)
 - 示例: `stat -f "%N inode=%i size=%z links=%l" ~/.zshrc`
@@ -149,6 +181,8 @@
 - 来源卷: 第二卷 (inode 与数据分离)
 
 ## ln
+- 分类: 文件与磁盘
+- 课卷: 2
 - 别名: 建软链,软链接,symlink
 - 作用: 创建链接——硬链接(默认) 或 软链接(`-s`)，把命令"放"进 PATH
 - 用法: ln 源 目标(硬) ; ln -s 源 目标(软) ; ln -sf 源 目标(强制覆盖)
@@ -158,6 +192,8 @@
 - 来源卷: 第二卷 / 实战软链
 
 ## df
+- 分类: 文件与磁盘
+- 课卷: 2
 - 别名: 看磁盘,磁盘空间,磁盘占用,剩多少空间,disk,cipan
 - 作用: 查看磁盘各挂载点已用/可用空间
 - 用法: df -h
@@ -166,7 +202,10 @@
 - Windows对照: `wmic logicaldisk get size,freespace`
 - 来源卷: 第二卷
 - 常用: 是
+
 ## du
+- 分类: 文件与磁盘
+- 课卷: 2
 - 别名: 文件夹大小,看目录占用,大文件,folder size
 - 作用: 统计目录/文件占用大小（排查谁占空间）
 - 用法: du -sh <路径> ; du -sh ~/.* 2>/dev/null | sort -h
@@ -176,6 +215,8 @@
 - 来源卷: 第二卷 (安全巡检)
 
 ## find
+- 分类: 文件与磁盘
+- 课卷: 2,7
 - 别名: 找文件,搜索文件,按名找,find file
 - 作用: 按名称/类型/时间递归查找文件
 - 用法: find <起点> -name "模式" ; find . -type f -mtime -1
@@ -184,7 +225,10 @@
 - Windows对照: `dir /s /b` 或 PowerShell `Get-ChildItem -Recurse`
 - 来源卷: 第二卷 / 第七卷
 - 常用: 是
+
 ## xattr
+- 分类: 文件与磁盘
+- 课卷: 2
 - 作用: 查看/管理 macOS 扩展属性（@ 标记的来源），含 quarantine 隔离标记
 - 用法: xattr -l <文件> ; xattr -d com.apple.quarantine <文件>
 - 示例: `xattr -l ~/Downloads/foo.dmg` 看下载隔离标记（Gatekeeper 依据）
@@ -192,7 +236,13 @@
 - Windows对照: NTFS 备用数据流(ADS)，`dir /r`
 - 来源卷: 第二卷 (隐藏与隔离)
 
+---
+
+# 4. Shell 与环境（11 张）
+
 ## echo $PATH
+- 分类: Shell 与环境
+- 课卷: 3
 - 作用: 查看当前 PATH（命令查找路径，冒号分隔，从左到右优先）
 - 用法: echo $PATH | tr ':' '\n'  （分行更易读）
 - 示例: 排错"command not found"先看 PATH 含不含命令所在目录
@@ -201,6 +251,8 @@
 - 来源卷: 第三卷 / 自检三连
 
 ## export
+- 分类: Shell 与环境
+- 课卷: 3
 - 作用: 把变量"导出"为环境变量（子进程可见）；仅写 `VAR=val` 不会传给子进程
 - 用法: export VAR=值 ; export PATH="$PATH:/新目录"
 - 示例: `export PATH="$HOME/bin:$PATH"` 把自定义目录插到最前（最高优先）
@@ -209,6 +261,8 @@
 - 来源卷: 第三卷
 
 ## alias
+- 分类: Shell 与环境
+- 课卷: 3
 - 作用: 给命令起短别名（仅当前 shell 会话，写入 .zshrc 才持久）
 - 用法: alias ll='ls -la' ; alias  (列出全部)
 - 示例: `alias gs='git status'` 省敲键盘
@@ -217,6 +271,8 @@
 - 来源卷: 第三卷 / 安全(PATH劫持/alias钓鱼)
 
 ## type
+- 分类: Shell 与环境
+- 课卷: 3
 - 作用: 揭示一个"命令名"到底是什么（别名/函数/内建/文件路径）
 - 用法: type <名称> ; type -a <名称>
 - 示例: `type ls` 看是否被 alias; `type claude` 看真实路径 → 排错利器
@@ -225,6 +281,8 @@
 - 来源卷: 第三卷 / 自检
 
 ## which
+- 分类: Shell 与环境
+- 课卷: 3
 - 作用: 显示命令在 PATH 中的绝对路径（自检三连之一）
 - 用法: which <命令> ; which -a <命令>
 - 示例: `which node` → ~/.nvm/.../bin/node；"command not found"先跑它
@@ -233,6 +291,8 @@
 - 来源卷: 第三卷 / 自检三连
 
 ## source
+- 分类: Shell 与环境
+- 课卷: 3
 - 作用: 在当前 shell 立即执行某文件（让改动的 .zshrc 生效，不开新终端）
 - 用法: source ~/.zshrc ; . ~/.zshrc
 - 示例: 改完配置后 `source ~/.zshrc` 即可刷新，不必重开
@@ -241,6 +301,8 @@
 - 来源卷: 第三卷
 
 ## zsh -n
+- 分类: Shell 与环境
+- 课卷: 3
 - 作用: 语法检查（dry-run，不执行），改 .zshrc 后必跑的"安全闸"
 - 用法: zsh -n ~/.zshrc
 - 示例: 编辑前后各跑一次，无输出=语法 OK（你曾因引号写错整文件失效）
@@ -249,6 +311,8 @@
 - 来源卷: 第三卷 / 防御
 
 ## cat ~/.zshrc
+- 分类: Shell 与环境
+- 课卷: 3
 - 作用: 查看 shell 配置文件内容（自检三连之一，定位配置写坏）
 - 用法: cat ~/.zshrc
 - 示例: "command not found"时看 nvm/PATH 段是否还在、有无乱码/缺引号
@@ -257,6 +321,8 @@
 - 来源卷: 第三卷 / 自检三连
 
 ## brew
+- 分类: Shell 与环境
+- 课卷: 6
 - 别名: 装软件,包管理,安装软件,install
 - 作用: Homebrew 包管理器（macOS 装命令行工具的"应用商店"）
 - 用法: brew install <包> ; brew list ; brew --prefix
@@ -265,7 +331,10 @@
 - Windows对照: `winget` / `scoop`
 - 来源卷: 第六卷 / 实战
 - 常用: 是
+
 ## npm (全局)
+- 分类: Shell 与环境
+- 课卷: 6
 - 作用: Node 包管理；`npm install -g` 装全局命令（claude/codex 等）
 - 用法: npm install -g <包> ; npm ls -g --depth=0 ; npm config get prefix
 - 示例: 全局命令装在 nvm 的 node 版本目录里，需 nvm 加载才进 PATH
@@ -274,6 +343,8 @@
 - 来源卷: 第六卷 / 实战
 
 ## ln -sf (实战软链·让 GUI 找到 CLI)
+- 分类: Shell 与环境
+- 课卷: 4
 - 别名: 让gui找到命令,gui找不到cli,软链cli
 - 作用: 把 nvm 里的命令软链到 /usr/local/bin（GUI 应用默认 PATH），解决 WeSight 检测不到
 - 用法: sudo ln -sf ~/.nvm/versions/node/v26.5.0/bin/{node,npm,npx,claude,codex} /usr/local/bin/
@@ -284,7 +355,13 @@
 
 ---
 
+---
+
+# 5. 版本控制（9 张）
+
 ## git status
+- 分类: 版本控制
+- 课卷: 6
 - 别名: 看改动,当前状态,改了啥,git状态
 - 作用: 看仓库当前状态——哪些文件改了、哪些是新增未跟踪（动手前先跑它，知道"我改了啥"）
 - 用法: git status ; git status -s
@@ -293,7 +370,10 @@
 - Windows对照: 跨平台，Git Bash / PowerShell 同命令
 - 来源卷: 第六卷·实战(git)
 - 常用: 是
+
 ## git log
+- 分类: 版本控制
+- 课卷: 6
 - 作用: 看提交历史（快照时间线），确认"发生过什么、谁改的"
 - 用法: git log ; git log --oneline ; git log -p <文件>
 - 示例: `git log --oneline -10` → 最近 10 条一行版; `git log -p README.md` → 某文件逐次改动; `git log --stat` → 每次改了哪些文件
@@ -302,6 +382,8 @@
 - 来源卷: 第六卷
 
 ## git add / commit
+- 分类: 版本控制
+- 课卷: 6
 - 别名: 提交,保存改动,commit代码,交代码
 - 作用: 把改动「暂存」再「提交」成一次历史记录（commit 才是真保存，只改不提交等于没存）
 - 用法: git add <文件> ; git commit -m "说明"
@@ -311,6 +393,8 @@
 - 来源卷: 第六卷·实战
 
 ## git branch / switch
+- 分类: 版本控制
+- 课卷: 6
 - 别名: 建分支,切换分支,branch
 - 作用: 看/建/切换分支（并行改东西互相不干扰，主线与实验分开）
 - 用法: git branch ; git switch -c <新分支> ; git switch <分支>
@@ -320,6 +404,8 @@
 - 来源卷: 第六卷
 
 ## git fetch / pull / push
+- 分类: 版本控制
+- 课卷: 6
 - 别名: 同步,推送到远程,拉取代码,push,pull
 - 作用: 与远程仓库同步——拉更新（pull）或推提交（push）
 - 用法: git fetch ; git pull ; git push
@@ -329,6 +415,8 @@
 - 来源卷: 第六卷·实战
 
 ## git stash
+- 分类: 版本控制
+- 课卷: 6
 - 别名: 暂存改动,暂存,stash
 - 作用: 把当前未提交改动「暂存」到一边，腾空工作区（紧急切分支/拉代码时救场）
 - 用法: git stash ; git stash pop ; git stash list
@@ -338,6 +426,8 @@
 - 来源卷: 第六卷
 
 ## git diff
+- 分类: 版本控制
+- 课卷: 6
 - 别名: 看差异,对比改动,diff
 - 作用: 看具体改了什么（diff = 差异，比读日志直观得多）
 - 用法: git diff ; git diff --staged ; git diff <版本1> <版本2>
@@ -347,6 +437,8 @@
 - 来源卷: 第六卷
 
 ## git remote / clone
+- 分类: 版本控制
+- 课卷: 6
 - 作用: 远程仓库地址管理 / 首次把整库拉到本地
 - 用法: git remote -v ; git clone <url>
 - 示例: `git remote -v` 看当前远程地址; `git clone https://github.com/x/y.git` 克隆; `git remote set-url origin <新url>` 改地址
@@ -355,6 +447,8 @@
 - 来源卷: 第六卷
 
 ## git 别名 (oh-my-zsh 风格)
+- 分类: 版本控制
+- 课卷: 3,6
 - 作用: 给 git 子命令起短别名，少敲键盘（g=git / gs=status / gl=log / gp=push / gpl=pull）
 - 用法: 写在 ~/.zshrc，或启用 oh-my-zsh 自带 git 插件（已含一套预设别名）
 - 示例: `alias g='git'` ; `alias gs='git status'` ; `alias gl='git log --oneline'` ; `alias gp='git push'` ; `alias gpl='git pull'` ; `alias gd='git diff'`
@@ -364,7 +458,105 @@
 
 ---
 
+---
+
+# 6. 网络与远程（8 张）
+
+## lsof
+- 分类: 网络与远程
+- 课卷: 2
+- 别名: 查端口占用,端口被谁占用,谁占了端口,监听端口,port,端口进程
+- 作用: 查看哪些进程打开了文件或占用了网络端口
+- 用法: lsof -i :<端口> ; lsof -iTCP -sTCP:LISTEN -n -P
+- 示例: `lsof -i :3000` → 找出占用 3000 端口的进程；`lsof -iTCP -sTCP:LISTEN -n -P` → 列出 TCP 监听端口
+- 踩坑: 查不到时可能需要 `sudo`；结束进程前先确认 PID 和程序身份，不要见端口就强杀
+- Windows对照: `netstat -ano | findstr :3000` 查 PID，再用 `tasklist /FI "PID eq <PID>"` 确认程序
+- 来源卷: 第二卷 文件系统 / 网络排障
+
+## ssh
+- 分类: 网络与远程
+- 课卷: -
+- 别名: 远程登录,连服务器,登录服务器,ssh连接,远程执行命令
+- 作用: 登录远程主机并执行命令（全程加密）；也是所有远程操作的地基
+- 用法: `ssh [选项] 用户@主机` ；只跑一条命令用 `ssh 用户@主机 "命令"`
+- 示例: `ssh user@192.168.1.10` → 登录；`ssh lab "df -h"` → 只执行一条命令并返回；`ssh -p 2222 user@host` → 指定端口
+- 踩坑: 首次连接要确认主机指纹（输 yes）；连不上按三步查——主机通不通（ping）、22 端口开没开（nc -vz host 22）、认证对不对
+- Windows对照: Windows 10+ 自带 ssh 客户端；但要让别人连 Windows，需另装 OpenSSH Server
+- 来源卷: 工具箱·远程控制
+
+## ssh-keygen
+- 分类: 网络与远程
+- 课卷: -
+- 别名: 生成密钥,免密登录,密钥对,ssh密钥
+- 作用: 生成 SSH 密钥对（公钥 + 私钥），免密登录的起点
+- 用法: `ssh-keygen -t ed25519 -C "备注"`
+- 示例: `ssh-keygen -t ed25519 -C "macbook"` → 生成 ~/.ssh/id_ed25519（私钥）与 id_ed25519.pub（公钥）
+- 踩坑: 私钥（无 .pub 后缀那个）永不外传；推荐 ed25519，别再用 rsa 2048；想要空密码直接回车，但私钥文件泄露即等于失守
+- Windows对照: 同（Windows 10+ 自带 ssh-keygen）
+- 来源卷: 工具箱·远程控制
+
+## ssh-copy-id
+- 分类: 网络与远程
+- 课卷: -
+- 别名: 装公钥,配置免密,免密登录,拷贝公钥
+- 作用: 把本地公钥追加到远端 ~/.ssh/authorized_keys，实现免密登录
+- 用法: `ssh-copy-id [-i 公钥] [-p 端口] 用户@主机`
+- 示例: `ssh-copy-id user@server` → 输最后一次密码，之后 `ssh user@server` 就不问密码了
+- 踩坑: macOS 可能没有此命令（`brew install ssh-copy-id`），可手动：`cat ~/.ssh/id_ed25519.pub | ssh user@host "mkdir -p ~/.ssh && cat >> ~/.ssh/authorized_keys"`；远端 ~/.ssh 权限必须 700、authorized_keys 必须 600，否则免密静默失效
+- Windows对照: 无此命令；手动 `type $env:USERPROFILE\.ssh\id_ed25519.pub | ssh user@host "..."`（`ssh-copy-id` 等价物）
+- 来源卷: 工具箱·远程控制
+
+## ~/.ssh/config
+- 分类: 网络与远程
+- 课卷: -
+- 别名: 主机别名,ssh配置,简化ssh,跳板机配置
+- 作用: 给常用主机起短名，省去每次敲 IP/端口/用户名；也是跳板机、隧道、密钥指定的统一落点
+- 用法: 编辑 `~/.ssh/config`，一台主机写一个 `Host` 块
+- 示例: 写 `Host lab` / `HostName 100.64.0.5` / `User zhangsan` / `Port 2222` / `IdentityFile ~/.ssh/id_ed25519` → 以后 `ssh lab` 即可
+- 踩坑: 配置文件权限必须 600（`chmod 600 ~/.ssh/config`），否则 ssh 直接拒读；`Host` 短名别和真实域名冲突
+- Windows对照: 同样支持 `%USERPROFILE%\.ssh\config`
+- 来源卷: 工具箱·远程控制
+
+## sftp
+- 分类: 网络与远程
+- 课卷: -
+- 别名: 传文件,上传下载,远程文件,交互传输
+- 作用: 基于 SSH 的交互式文件传输，可浏览、上传、下载
+- 用法: `sftp 用户@主机` → 进入 `sftp>` 提示符
+- 示例: `sftp user@host` 后：`ls` 看远端、`cd` 切远端目录、`get 远程文件` 下载、`put 本地文件` 上传、`bye` 退出
+- 踩坑: 传大量文件或要增量/断点续传时，用 `rsync -avz --progress` 比 sftp 高效得多；`put -r` 递归上传并非所有实现都支持
+- Windows对照: 同（Windows 自带 sftp）
+- 来源卷: 工具箱·远程控制
+
+## scp
+- 分类: 网络与远程
+- 课卷: -
+- 别名: 拷贝文件,跨机复制,复制到服务器,传输文件
+- 作用: 一条命令在两台机器之间拷贝文件
+- 用法: `scp [选项] 源 目标`（远端写作 `用户@主机:路径`）
+- 示例: `scp app.log user@host:/tmp/` → 上传；`scp user@host:/var/log/app.log .` → 下载到当前目录；`scp -r 目录 user@host:/tmp/` → 递归拷贝目录
+- 踩坑: 新版 OpenSSH 的 scp 底层已换成 SFTP 协议；**大量文件、断点续传、增量同步别用 scp**，改用 `rsync -avz --progress`；路径含空格要转义
+- Windows对照: 同
+- 来源卷: 工具箱·远程控制
+
+## ssh-agent / ssh-add
+- 分类: 网络与远程
+- 课卷: -
+- 别名: 密钥代理,免重复输密码,记住密钥,钥匙串
+- 作用: 在内存中缓存已解密的私钥，避免每次 ssh 都输 passphrase
+- 用法: `eval "$(ssh-agent -s)"` 启动，然后 `ssh-add ~/.ssh/id_ed25519` 加载
+- 示例: macOS 更省事：`ssh-add --apple-use-keychain ~/.ssh/id_ed25519` → 存进钥匙串，重启后仍生效
+- 踩坑: agent 默认只在当前会话有效；macOS 想持久要在 `~/.ssh/config` 加 `AddKeysToAgent yes` 与 `UseKeychain yes`；`ssh-add -l` 查看已加载密钥，`ssh-add -D` 全部清空
+- Windows对照: Windows 有 ssh-agent 服务：`Set-Service ssh-agent -StartupType Automatic` 后 `Start-Service ssh-agent`
+- 来源卷: 工具箱·远程控制
+
+---
+
+# 7. AI 工具（8 张）
+
 ## ollama serve
+- 分类: AI 工具
+- 课卷: -
 - 别名: 启动ollama,开ollama服务,ollama后台,起服务
 - 作用: 启动 ollama 本地服务（默认监听 11434 端口），供 ibox --llm 等本机程序调用
 - 用法: `ollama serve` （后台常驻；macOS 也可用 `brew services start ollama` 开机自启）
@@ -374,6 +566,8 @@
 - 来源卷: 工具箱·ollama
 
 ## ollama pull
+- 分类: AI 工具
+- 课卷: -
 - 别名: 下载模型,拉模型,装模型,获取模型
 - 作用: 从模型库拉取模型到本机（首次使用某模型必须这一步）
 - 用法: `ollama pull <模型名>`
@@ -387,6 +581,8 @@
 - 来源卷: 工具箱·ollama
 
 ## ollama run
+- 分类: AI 工具
+- 课卷: -
 - 别名: 跑模型,聊天,和模型对话,开聊
 - 作用: 进入模型对话（没有会自动先 pull）
 - 用法: `ollama run <模型名>`
@@ -399,6 +595,8 @@
 - 来源卷: 工具箱·ollama
 
 ## ollama list
+- 分类: AI 工具
+- 课卷: -
 - 别名: 看有哪些模型,模型列表,已装模型
 - 作用: 列出本机已拉取的模型
 - 用法: `ollama list`
@@ -409,6 +607,8 @@
 - 来源卷: 工具箱·ollama
 
 ## ollama ps
+- 分类: AI 工具
+- 课卷: -
 - 别名: 看运行中的模型,模型进程,谁在跑
 - 作用: 查看正在运行的模型进程（占多少内存）
 - 用法: `ollama ps`
@@ -418,6 +618,8 @@
 - 来源卷: 工具箱·ollama
 
 ## ollama rm
+- 分类: AI 工具
+- 课卷: -
 - 别名: 删模型,卸载模型,移除模型
 - 作用: 删除本机模型，释放磁盘
 - 用法: `ollama rm <模型名>`
@@ -427,6 +629,8 @@
 - 来源卷: 工具箱·ollama
 
 ## ollama embeddings (REST)
+- 分类: AI 工具
+- 课卷: -
 - 别名: 向量化接口,embedding调用,语义向量,文本转向量
 - 作用: 用任意程序调 ollama 做文本向量化（ibox --llm 就是这么干的）
 - 用法: POST http://localhost:11434/api/embeddings   body: {"model":...,"prompt":...}
@@ -439,6 +643,8 @@
 - 来源卷: 工具箱·ollama
 
 ## ollama show
+- 分类: AI 工具
+- 课卷: -
 - 别名: 看模型详情,模型参数,模型信息,查模型配置
 - 作用: 查看已拉模型的元信息（参数/上下文窗口/license/模板/系统提示），排查"为啥这个模型表现不对"
 - 用法: `ollama show <模型名>` ；对话中也可用 `/show`
@@ -451,66 +657,3 @@
 - 来源卷: 工具箱·ollama
 - 备注: 本卡为「自己加卡」功能的现场演示示例（见 ibox-使用说明.md §7）
 - 来源卷: 工具箱·ollama
-
-## ssh
-- 别名: 远程登录,连服务器,登录服务器,ssh连接,远程执行命令
-- 作用: 登录远程主机并执行命令（全程加密）；也是所有远程操作的地基
-- 用法: `ssh [选项] 用户@主机` ；只跑一条命令用 `ssh 用户@主机 "命令"`
-- 示例: `ssh user@192.168.1.10` → 登录；`ssh lab "df -h"` → 只执行一条命令并返回；`ssh -p 2222 user@host` → 指定端口
-- 踩坑: 首次连接要确认主机指纹（输 yes）；连不上按三步查——主机通不通（ping）、22 端口开没开（nc -vz host 22）、认证对不对
-- Windows对照: Windows 10+ 自带 ssh 客户端；但要让别人连 Windows，需另装 OpenSSH Server
-- 来源卷: 工具箱·远程控制
-
-## ssh-keygen
-- 别名: 生成密钥,免密登录,密钥对,ssh密钥
-- 作用: 生成 SSH 密钥对（公钥 + 私钥），免密登录的起点
-- 用法: `ssh-keygen -t ed25519 -C "备注"`
-- 示例: `ssh-keygen -t ed25519 -C "macbook"` → 生成 ~/.ssh/id_ed25519（私钥）与 id_ed25519.pub（公钥）
-- 踩坑: 私钥（无 .pub 后缀那个）永不外传；推荐 ed25519，别再用 rsa 2048；想要空密码直接回车，但私钥文件泄露即等于失守
-- Windows对照: 同（Windows 10+ 自带 ssh-keygen）
-- 来源卷: 工具箱·远程控制
-
-## ssh-copy-id
-- 别名: 装公钥,配置免密,免密登录,拷贝公钥
-- 作用: 把本地公钥追加到远端 ~/.ssh/authorized_keys，实现免密登录
-- 用法: `ssh-copy-id [-i 公钥] [-p 端口] 用户@主机`
-- 示例: `ssh-copy-id user@server` → 输最后一次密码，之后 `ssh user@server` 就不问密码了
-- 踩坑: macOS 可能没有此命令（`brew install ssh-copy-id`），可手动：`cat ~/.ssh/id_ed25519.pub | ssh user@host "mkdir -p ~/.ssh && cat >> ~/.ssh/authorized_keys"`；远端 ~/.ssh 权限必须 700、authorized_keys 必须 600，否则免密静默失效
-- Windows对照: 无此命令；手动 `type $env:USERPROFILE\.ssh\id_ed25519.pub | ssh user@host "..."`（`ssh-copy-id` 等价物）
-- 来源卷: 工具箱·远程控制
-
-## ~/.ssh/config
-- 别名: 主机别名,ssh配置,简化ssh,跳板机配置
-- 作用: 给常用主机起短名，省去每次敲 IP/端口/用户名；也是跳板机、隧道、密钥指定的统一落点
-- 用法: 编辑 `~/.ssh/config`，一台主机写一个 `Host` 块
-- 示例: 写 `Host lab` / `HostName 100.64.0.5` / `User zhangsan` / `Port 2222` / `IdentityFile ~/.ssh/id_ed25519` → 以后 `ssh lab` 即可
-- 踩坑: 配置文件权限必须 600（`chmod 600 ~/.ssh/config`），否则 ssh 直接拒读；`Host` 短名别和真实域名冲突
-- Windows对照: 同样支持 `%USERPROFILE%\.ssh\config`
-- 来源卷: 工具箱·远程控制
-
-## sftp
-- 别名: 传文件,上传下载,远程文件,交互传输
-- 作用: 基于 SSH 的交互式文件传输，可浏览、上传、下载
-- 用法: `sftp 用户@主机` → 进入 `sftp>` 提示符
-- 示例: `sftp user@host` 后：`ls` 看远端、`cd` 切远端目录、`get 远程文件` 下载、`put 本地文件` 上传、`bye` 退出
-- 踩坑: 传大量文件或要增量/断点续传时，用 `rsync -avz --progress` 比 sftp 高效得多；`put -r` 递归上传并非所有实现都支持
-- Windows对照: 同（Windows 自带 sftp）
-- 来源卷: 工具箱·远程控制
-
-## scp
-- 别名: 拷贝文件,跨机复制,复制到服务器,传输文件
-- 作用: 一条命令在两台机器之间拷贝文件
-- 用法: `scp [选项] 源 目标`（远端写作 `用户@主机:路径`）
-- 示例: `scp app.log user@host:/tmp/` → 上传；`scp user@host:/var/log/app.log .` → 下载到当前目录；`scp -r 目录 user@host:/tmp/` → 递归拷贝目录
-- 踩坑: 新版 OpenSSH 的 scp 底层已换成 SFTP 协议；**大量文件、断点续传、增量同步别用 scp**，改用 `rsync -avz --progress`；路径含空格要转义
-- Windows对照: 同
-- 来源卷: 工具箱·远程控制
-
-## ssh-agent / ssh-add
-- 别名: 密钥代理,免重复输密码,记住密钥,钥匙串
-- 作用: 在内存中缓存已解密的私钥，避免每次 ssh 都输 passphrase
-- 用法: `eval "$(ssh-agent -s)"` 启动，然后 `ssh-add ~/.ssh/id_ed25519` 加载
-- 示例: macOS 更省事：`ssh-add --apple-use-keychain ~/.ssh/id_ed25519` → 存进钥匙串，重启后仍生效
-- 踩坑: agent 默认只在当前会话有效；macOS 想持久要在 `~/.ssh/config` 加 `AddKeysToAgent yes` 与 `UseKeychain yes`；`ssh-add -l` 查看已加载密钥，`ssh-add -D` 全部清空
-- Windows对照: Windows 有 ssh-agent 服务：`Set-Service ssh-agent -StartupType Automatic` 后 `Start-Service ssh-agent`
-- 来源卷: 工具箱·远程控制
