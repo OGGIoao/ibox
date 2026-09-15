@@ -39,10 +39,12 @@
 | `ibox sync` | 一键 git 同步（当前仓库） | `gup` |
 | `ibox learn` | 学习模式：分类目录 + 学习进度 | — |
 | `ibox learn <分类>` | 依次过某一类的卡（可只写关键词，如 `ibox learn 网络`） | — |
+| `ibox learn --卷 2` | 只过某一 OS 课卷的卡（跨卷卡在相关卷里都会出现） | — |
 | `ibox learn --due` | 只过「该复习的」卡片（按记忆强度自动挑） | — |
 | `ibox card check` | 卡库体检：分类合法 / 字段完整 / 卡名唯一 | — |
 | `ibox card list [--分类 X]` | 列出卡片（含分类与课卷） | — |
 | `ibox card insert <文件>` | 按卡里的「分类」字段**自动插进对应分区** | — |
+| `ibox card sync [--force]` | 比对两份数据源；`--force` 以仓库版覆盖用户级（先备份） | — |
 
 `--in` 可选值：`note`（默认）· `todo` · `clip` · `git` · `log`。省略 `--in` 就是搜快记。
 
