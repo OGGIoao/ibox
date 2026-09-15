@@ -35,6 +35,7 @@
 ## system_profiler
 - 分类: 硬件与系统信息
 - 课卷: 0
+- 别名: 硬件信息,系统报告,看配置,硬件详情,机器配置
 - 作用: 输出完整硬件/系统画像（macOS 独有，GUI"关于本机"的命令行版）
 - 用法: system_profiler <数据类型>
 - 示例: `system_profiler SPHardwareDataType` → 芯片/内存/序列号; `system_profiler SPSoftwareDataType` → 系统版本
@@ -57,6 +58,7 @@
 ## powermetrics
 - 分类: 硬件与系统信息
 - 课卷: 0
+- 别名: 功耗,耗电,电源监控,看功耗,性能功耗
 - 作用: 实时功耗/温度/各 CPU 核心负载（需 root）
 - 用法: sudo powermetrics [--samplers 项] [-n 次数]
 - 示例: `sudo powermetrics` → 滚屏输出（Ctrl+C 退出）; 看 CPU 各性能核/能效核占用
@@ -89,6 +91,7 @@
 ## uptime
 - 分类: 硬件与系统信息
 - 课卷: 1
+- 别名: 开机多久,已运行多久,运行时间,在线时长
 - 作用: 看系统运行时长与平均负载（load average）
 - 用法: uptime
 - 示例: `uptime` → 运行天数 + 3 个负载数（1/5/15 分钟）；M 系列看核心数换算
@@ -163,6 +166,7 @@
 ## mount
 - 分类: 文件与磁盘
 - 课卷: 2
+- 别名: 挂载,看挂载点,磁盘挂载,挂载信息
 - 作用: 查看已挂载的文件系统及其类型/选项
 - 用法: mount ; mount | grep apfs
 - 示例: `mount | head` → 看 `/` 是 apfs, sealed, read-only（系统盘密封只读=SIP 体现）
@@ -173,6 +177,7 @@
 ## stat
 - 分类: 文件与磁盘
 - 课卷: 2
+- 别名: 文件详情,文件属性,文件元信息,看inode
 - 作用: 查看文件的 inode/权限/大小/链接数等元数据
 - 用法: stat -f "格式串" <文件> (macOS BSD 风格)
 - 示例: `stat -f "%N inode=%i size=%z links=%l" ~/.zshrc`
@@ -229,6 +234,7 @@
 ## xattr
 - 分类: 文件与磁盘
 - 课卷: 2
+- 别名: 扩展属性,自定义属性,macOS属性,文件扩展属性
 - 作用: 查看/管理 macOS 扩展属性（@ 标记的来源），含 quarantine 隔离标记
 - 用法: xattr -l <文件> ; xattr -d com.apple.quarantine <文件>
 - 示例: `xattr -l ~/Downloads/foo.dmg` 看下载隔离标记（Gatekeeper 依据）
@@ -243,6 +249,7 @@
 ## echo $PATH
 - 分类: Shell 与环境
 - 课卷: 3
+- 别名: 看PATH,环境变量,路径变量,PATH在哪
 - 作用: 查看当前 PATH（命令查找路径，冒号分隔，从左到右优先）
 - 用法: echo $PATH | tr ':' '\n'  （分行更易读）
 - 示例: 排错"command not found"先看 PATH 含不含命令所在目录
@@ -253,6 +260,7 @@
 ## export
 - 分类: Shell 与环境
 - 课卷: 3
+- 别名: 设置环境变量,导出变量,临时变量,加环境变量
 - 作用: 把变量"导出"为环境变量（子进程可见）；仅写 `VAR=val` 不会传给子进程
 - 用法: export VAR=值 ; export PATH="$PATH:/新目录"
 - 示例: `export PATH="$HOME/bin:$PATH"` 把自定义目录插到最前（最高优先）
@@ -263,6 +271,7 @@
 ## alias
 - 分类: Shell 与环境
 - 课卷: 3
+- 别名: 起别名,命令别名,自定义短名,设别名
 - 作用: 给命令起短别名（仅当前 shell 会话，写入 .zshrc 才持久）
 - 用法: alias ll='ls -la' ; alias  (列出全部)
 - 示例: `alias gs='git status'` 省敲键盘
@@ -273,6 +282,7 @@
 ## type
 - 分类: Shell 与环境
 - 课卷: 3
+- 别名: 命令类型,看命令是什么,命令来源,命令在哪
 - 作用: 揭示一个"命令名"到底是什么（别名/函数/内建/文件路径）
 - 用法: type <名称> ; type -a <名称>
 - 示例: `type ls` 看是否被 alias; `type claude` 看真实路径 → 排错利器
@@ -283,6 +293,7 @@
 ## which
 - 分类: Shell 与环境
 - 课卷: 3
+- 别名: 找命令位置,命令路径,程序在哪,查命令路径
 - 作用: 显示命令在 PATH 中的绝对路径（自检三连之一）
 - 用法: which <命令> ; which -a <命令>
 - 示例: `which node` → ~/.nvm/.../bin/node；"command not found"先跑它
@@ -293,6 +304,7 @@
 ## source
 - 分类: Shell 与环境
 - 课卷: 3
+- 别名: 重载配置,生效配置,加载脚本,应用配置
 - 作用: 在当前 shell 立即执行某文件（让改动的 .zshrc 生效，不开新终端）
 - 用法: source ~/.zshrc ; . ~/.zshrc
 - 示例: 改完配置后 `source ~/.zshrc` 即可刷新，不必重开
@@ -303,6 +315,7 @@
 ## zsh -n
 - 分类: Shell 与环境
 - 课卷: 3
+- 别名: 检查语法,zsh语法,配置语法检查,脚本语法
 - 作用: 语法检查（dry-run，不执行），改 .zshrc 后必跑的"安全闸"
 - 用法: zsh -n ~/.zshrc
 - 示例: 编辑前后各跑一次，无输出=语法 OK（你曾因引号写错整文件失效）
@@ -313,6 +326,7 @@
 ## cat ~/.zshrc
 - 分类: Shell 与环境
 - 课卷: 3
+- 别名: 看配置,查看zsh配置,打开配置文件,看shell配置
 - 作用: 查看 shell 配置文件内容（自检三连之一，定位配置写坏）
 - 用法: cat ~/.zshrc
 - 示例: "command not found"时看 nvm/PATH 段是否还在、有无乱码/缺引号
@@ -335,6 +349,7 @@
 ## npm (全局)
 - 分类: Shell 与环境
 - 课卷: 6
+- 别名: 全局装包,安装npm包,装CLI工具,全局安装
 - 作用: Node 包管理；`npm install -g` 装全局命令（claude/codex 等）
 - 用法: npm install -g <包> ; npm ls -g --depth=0 ; npm config get prefix
 - 示例: 全局命令装在 nvm 的 node 版本目录里，需 nvm 加载才进 PATH
@@ -374,6 +389,7 @@
 ## git log
 - 分类: 版本控制
 - 课卷: 6
+- 别名: 看提交历史,提交记录,历史日志,查看log
 - 作用: 看提交历史（快照时间线），确认"发生过什么、谁改的"
 - 用法: git log ; git log --oneline ; git log -p <文件>
 - 示例: `git log --oneline -10` → 最近 10 条一行版; `git log -p README.md` → 某文件逐次改动; `git log --stat` → 每次改了哪些文件
@@ -439,6 +455,7 @@
 ## git remote / clone
 - 分类: 版本控制
 - 课卷: 6
+- 别名: 远程仓库,克隆仓库,拉仓库,clone
 - 作用: 远程仓库地址管理 / 首次把整库拉到本地
 - 用法: git remote -v ; git clone <url>
 - 示例: `git remote -v` 看当前远程地址; `git clone https://github.com/x/y.git` 克隆; `git remote set-url origin <新url>` 改地址
@@ -449,6 +466,7 @@
 ## git 别名 (oh-my-zsh 风格)
 - 分类: 版本控制
 - 课卷: 3,6
+- 别名: git缩写,短命令,git简写,别名配置
 - 作用: 给 git 子命令起短别名，少敲键盘（g=git / gs=status / gl=log / gp=push / gpl=pull）
 - 用法: 写在 ~/.zshrc，或启用 oh-my-zsh 自带 git 插件（已含一套预设别名）
 - 示例: `alias g='git'` ; `alias gs='git status'` ; `alias gl='git log --oneline'` ; `alias gp='git push'` ; `alias gpl='git pull'` ; `alias gd='git diff'`
@@ -460,7 +478,7 @@
 
 ---
 
-# 6. 网络与远程（8 张）
+# 6. 网络与远程（11 张）
 
 ## lsof
 - 分类: 网络与远程
@@ -552,6 +570,39 @@
 
 ---
 
+
+## tailscale
+- 分类: 网络与远程
+- 课卷: -
+- 别名: 内网穿透,虚拟内网,异地组网,免公网IP,跨机互控,组网
+- 作用: 把多台设备组进一个虚拟内网（每台分到 100.x 地址），互相直连——免公网 IP、免端口映射
+- 用法: 各设备都装 tailscale 并登同一账号，再用 `tailscale status` 看在线设备与地址
+- 示例: `tailscale status` → 列出已组网设备及其 100.x 地址；`tailscale ip -4` → 只看本机虚拟 IP；`ping 100.x.y.z` → 验证直连是否通
+- 踩坑: 免费版个人够用；**组网只负责「路通」，不负责「开门」**——连上后仍要目标机自己开了 SSH/RDP 服务才行；企业网络可能拦 UDP，会退回 DERP 中继（变慢）
+- Windows对照: 同（官方 Windows 客户端，装完托盘登录）
+- 来源卷: 工具箱·远程控制
+
+## macOS 开启远程登录
+- 分类: 网络与远程
+- 课卷: -
+- 别名: 开启SSH,远程登录,被连mac,mac当服务器,开sshd
+- 作用: 让别的机器能 SSH 连进这台 Mac（macOS 自带 SSH 服务端，打开即可）
+- 用法: 系统设置 → 通用 → 共享 → 打开「远程登录」；命令行等价 `sudo systemsetup -setremotelogin on`
+- 示例: `sudo systemsetup -setremotelogin on` → 开启；`sudo systemsetup -getremotelogin` → 查状态；对方 `ssh 你的用户名@这台机器的地址`
+- 踩坑: 新版 macOS 上 `systemsetup` 可能要求在「系统设置 → 隐私与安全性 → 完全磁盘访问」里给终端授权，否则报错；**只在可信网络开启**（或配合 tailscale 限定来源）；关闭用 `-setremotelogin off`
+- Windows对照: 对应「Windows 装 OpenSSH Server」（见另一张卡），方向恰好相反
+- 来源卷: 工具箱·远程控制
+
+## Windows 装 OpenSSH Server
+- 分类: 网络与远程
+- 课卷: -
+- 别名: windows开ssh,装sshd,被连windows,openssh服务端,win远程登录
+- 作用: 让别的机器能 SSH 连进这台 Windows —— **Windows 默认没有 SSH 服务端，必须手动加装**
+- 用法: 设置 → 应用 → 可选功能 → 添加功能 → 勾选「OpenSSH 服务器」；再用管理员 PowerShell 启动服务并设为自启
+- 示例: 管理员 PowerShell：`Add-WindowsCapability -Online -Name OpenSSH.Server~~~~0.0.1.0` 安装；`Start-Service sshd` 启动；`Set-Service -Name sshd -StartupType Automatic` 设为自启；`Get-Service sshd` 查状态
+- 踩坑: **这是 macOS↔Windows 互控最容易卡住的一步**（Windows 天生没有 sshd，而 macOS 自带）；默认登录 shell 是 cmd，想用 PowerShell 得改注册表 `DefaultShell`；防火墙需放行 22 端口
+- Windows对照: 本卡就是 Windows 侧
+- 来源卷: 工具箱·远程控制
 # 7. AI 工具（8 张）
 
 ## ollama serve
