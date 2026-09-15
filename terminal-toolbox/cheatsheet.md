@@ -451,3 +451,66 @@
 - 来源卷: 工具箱·ollama
 - 备注: 本卡为「自己加卡」功能的现场演示示例（见 ibox-使用说明.md §7）
 - 来源卷: 工具箱·ollama
+
+## ssh
+- 别名: 远程登录,连服务器,登录服务器,ssh连接,远程执行命令
+- 作用: 登录远程主机并执行命令（全程加密）；也是所有远程操作的地基
+- 用法: `ssh [选项] 用户@主机` ；只跑一条命令用 `ssh 用户@主机 "命令"`
+- 示例: `ssh user@192.168.1.10` → 登录；`ssh lab "df -h"` → 只执行一条命令并返回；`ssh -p 2222 user@host` → 指定端口
+- 踩坑: 首次连接要确认主机指纹（输 yes）；连不上按三步查——主机通不通（ping）、22 端口开没开（nc -vz host 22）、认证对不对
+- Windows对照: Windows 10+ 自带 ssh 客户端；但要让别人连 Windows，需另装 OpenSSH Server
+- 来源卷: 工具箱·远程控制
+
+## ssh-keygen
+- 别名: 生成密钥,免密登录,密钥对,ssh密钥
+- 作用: 生成 SSH 密钥对（公钥 + 私钥），免密登录的起点
+- 用法: `ssh-keygen -t ed25519 -C "备注"`
+- 示例: `ssh-keygen -t ed25519 -C "macbook"` → 生成 ~/.ssh/id_ed25519（私钥）与 id_ed25519.pub（公钥）
+- 踩坑: 私钥（无 .pub 后缀那个）永不外传；推荐 ed25519，别再用 rsa 2048；想要空密码直接回车，但私钥文件泄露即等于失守
+- Windows对照: 同（Windows 10+ 自带 ssh-keygen）
+- 来源卷: 工具箱·远程控制
+
+## ssh-copy-id
+- 别名: 装公钥,配置免密,免密登录,拷贝公钥
+- 作用: 把本地公钥追加到远端 ~/.ssh/authorized_keys，实现免密登录
+- 用法: `ssh-copy-id [-i 公钥] [-p 端口] 用户@主机`
+- 示例: `ssh-copy-id user@server` → 输最后一次密码，之后 `ssh user@server` 就不问密码了
+- 踩坑: macOS 可能没有此命令（`brew install ssh-copy-id`），可手动：`cat ~/.ssh/id_ed25519.pub | ssh user@host "mkdir -p ~/.ssh && cat >> ~/.ssh/authorized_keys"`；远端 ~/.ssh 权限必须 700、authorized_keys 必须 600，否则免密静默失效
+- Windows对照: 无此命令；手动 `type $env:USERPROFILE\.ssh\id_ed25519.pub | ssh user@host "..."`（`ssh-copy-id` 等价物）
+- 来源卷: 工具箱·远程控制
+
+## ~/.ssh/config
+- 别名: 主机别名,ssh配置,简化ssh,跳板机配置
+- 作用: 给常用主机起短名，省去每次敲 IP/端口/用户名；也是跳板机、隧道、密钥指定的统一落点
+- 用法: 编辑 `~/.ssh/config`，一台主机写一个 `Host` 块
+- 示例: 写 `Host lab` / `HostName 100.64.0.5` / `User zhangsan` / `Port 2222` / `IdentityFile ~/.ssh/id_ed25519` → 以后 `ssh lab` 即可
+- 踩坑: 配置文件权限必须 600（`chmod 600 ~/.ssh/config`），否则 ssh 直接拒读；`Host` 短名别和真实域名冲突
+- Windows对照: 同样支持 `%USERPROFILE%\.ssh\config`
+- 来源卷: 工具箱·远程控制
+
+## sftp
+- 别名: 传文件,上传下载,远程文件,交互传输
+- 作用: 基于 SSH 的交互式文件传输，可浏览、上传、下载
+- 用法: `sftp 用户@主机` → 进入 `sftp>` 提示符
+- 示例: `sftp user@host` 后：`ls` 看远端、`cd` 切远端目录、`get 远程文件` 下载、`put 本地文件` 上传、`bye` 退出
+- 踩坑: 传大量文件或要增量/断点续传时，用 `rsync -avz --progress` 比 sftp 高效得多；`put -r` 递归上传并非所有实现都支持
+- Windows对照: 同（Windows 自带 sftp）
+- 来源卷: 工具箱·远程控制
+
+## scp
+- 别名: 拷贝文件,跨机复制,复制到服务器,传输文件
+- 作用: 一条命令在两台机器之间拷贝文件
+- 用法: `scp [选项] 源 目标`（远端写作 `用户@主机:路径`）
+- 示例: `scp app.log user@host:/tmp/` → 上传；`scp user@host:/var/log/app.log .` → 下载到当前目录；`scp -r 目录 user@host:/tmp/` → 递归拷贝目录
+- 踩坑: 新版 OpenSSH 的 scp 底层已换成 SFTP 协议；**大量文件、断点续传、增量同步别用 scp**，改用 `rsync -avz --progress`；路径含空格要转义
+- Windows对照: 同
+- 来源卷: 工具箱·远程控制
+
+## ssh-agent / ssh-add
+- 别名: 密钥代理,免重复输密码,记住密钥,钥匙串
+- 作用: 在内存中缓存已解密的私钥，避免每次 ssh 都输 passphrase
+- 用法: `eval "$(ssh-agent -s)"` 启动，然后 `ssh-add ~/.ssh/id_ed25519` 加载
+- 示例: macOS 更省事：`ssh-add --apple-use-keychain ~/.ssh/id_ed25519` → 存进钥匙串，重启后仍生效
+- 踩坑: agent 默认只在当前会话有效；macOS 想持久要在 `~/.ssh/config` 加 `AddKeysToAgent yes` 与 `UseKeychain yes`；`ssh-add -l` 查看已加载密钥，`ssh-add -D` 全部清空
+- Windows对照: Windows 有 ssh-agent 服务：`Set-Service ssh-agent -StartupType Automatic` 后 `Start-Service ssh-agent`
+- 来源卷: 工具箱·远程控制
