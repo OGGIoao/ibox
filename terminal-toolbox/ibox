@@ -434,9 +434,52 @@ def cmd_card(argv):
         print("  ibox card list [--分类 X]    列出卡片（含分类与课卷）")
         print("  ibox card insert <文件>      把文件里的卡按「分类」插进对应分区")
         print("  ibox card insert <文件> --local-only   只写用户级数据源（不放仓库）")
+        print("  ibox card sync [--force]     比对两份数据源；--force 以仓库版覆盖用户级")
         print("\n可选分类：" + " / ".join(CATEGORY_ORDER))
         return
     sub, rest = argv[0], argv[1:]
+
+    if sub == "sync":
+        # 两份数据源（用户级 = 实际生效；仓库版 = 出厂副本）手工同步极易漂移，故做成命令
+        opts, _ = _split_opts(rest, bool_flags=("--force",))
+        user, repo = _cheat_paths()
+        if not os.path.isfile(repo):
+            print("（找不到仓库版 cheatsheet.md，无法比对）")
+            return
+        try:
+            with open(user, encoding="utf-8") as f:
+                ru = f.read()
+        except OSError:
+            ru = ""
+        with open(repo, encoding="utf-8") as f:
+            rr = f.read()
+        if ru == rr:
+            print("✅ 两份数据源完全一致（用户级 / 仓库版）")
+            return
+        cu = dict(_split_blocks(ru))
+        cr = dict(_split_blocks(rr))
+        only_u = sorted(set(cu) - set(cr))
+        only_r = sorted(set(cr) - set(cu))
+        diverge = sorted(n for n in set(cu) & set(cr) if cu[n].strip() != cr[n].strip())
+        print("⚠️ 两份数据源不一致：")
+        if only_u:
+            print("  仅用户级有（%d）：%s" % (len(only_u), "、".join(only_u[:8])))
+        if only_r:
+            print("  仅仓库版有（%d）：%s" % (len(only_r), "、".join(only_r[:8])))
+        if diverge:
+            print("  同名但内容不同（%d）：%s" % (len(diverge), "、".join(diverge[:8])))
+        if not opts.get("--force"):
+            print("\n加 `--force` 以仓库版为准覆盖用户级（会先备份为 .pre-sync）")
+            return
+        import shutil
+        try:
+            shutil.copyfile(user, user + ".pre-sync")
+            with open(user, "w", encoding="utf-8") as f:
+                f.write(rr)
+            print("\n✓ 已用仓库版覆盖用户级（旧文件备份为 cheatsheet.md.pre-sync）")
+        except OSError as e:
+            print("（同步失败：%s）" % e)
+        return
 
     if sub == "check":
         cards = _load_cards()
@@ -454,6 +497,11 @@ def cmd_card(argv):
             for f in _REQUIRED_FIELDS:
                 if f not in c:
                     problems.append("[%s] 缺字段「%s」" % (nm, f))
+            vol = (c.get("课卷") or "").strip()
+            if not vol:
+                problems.append("[%s] 缺「课卷」字段（`ibox learn --卷` 依赖它）" % nm)
+            elif vol != "-" and not all(p.strip().isdigit() for p in vol.split(",") if p.strip()):
+                problems.append("[%s] 课卷值「%s」不合法（应为 `-` 或 `2` 或 `2,7`）" % (nm, vol))
         if problems:
             print("⚠️ 发现 %d 个问题：" % len(problems))
             for p in problems:
@@ -545,10 +593,26 @@ def cmd_card(argv):
 def cmd_learn(argv):
     """ibox learn            → 分类目录 + 学习进度
     ibox learn <分类>       → 依次过该分类的卡
+    ibox learn --卷 <n>     → 只过某一 OS 课卷的卡（跨卷卡如 2,7 在 2 与 7 里都出现）
     ibox learn --due        → 只过「该复习的」（复用 pycheat 的记忆强度）"""
     import pycheat as P
-    opts, pos = _split_opts(argv, bool_flags=("--due", "-d"))
+    opts, pos = _split_opts(argv, flags_with_value=("--卷", "-V"), bool_flags=("--due", "-d"))
     cards = _load_cards()
+
+    vol = opts.get("--卷") or opts.get("-V")
+    if vol:
+        v = vol.split(".")[0].strip()          # 允许写 2 或 2.0
+        order = [c for c in cards
+                 if v in [x.strip() for x in (c.get("课卷") or "-").split(",")]]
+        if not order:
+            print("（课卷 %s 里还没有卡片；`ibox card list` 可看各卡的课卷）" % v)
+            return
+        names = [c["name"] for c in order]
+        print("开始学习「第 %s 卷」（%d 张）：%s" % (
+            v, len(order), "、".join(names[:8]) + ("…" if len(names) > 8 else "")))
+        print("n/→ 下一张 · p/← 上一张 · c 复制示例 · q 退出")
+        P.browse(order, 0, cards)
+        return
 
     if opts.get("--due") or opts.get("-d"):
         due = P.due_for_review(cards)
@@ -577,6 +641,7 @@ def cmd_learn(argv):
         print("  总进度 %d/%d" % (total_seen, len(cards)))
         print()
         print("  看某一类：ibox learn <分类名>（可只写关键词，如 `ibox learn 网络`）")
+        print("  按课卷筛：ibox learn --卷 2")
         print("  只看该复习的：ibox learn --due")
         return
 
@@ -631,9 +696,11 @@ def show_guide():
     print(bo + "│ " + R + M + "学习与维护" + R)
     print(bo + "│   " + R + G + "ibox learn" + R + "                    " + D + "按功能域学习（目录 + 进度）" + R)
     print(bo + "│   " + R + G + "ibox learn 网络" + R + "               " + D + "只看某一类（可只写关键词）" + R)
+    print(bo + "│   " + R + Y + "ibox learn --卷 2" + R + "             " + D + "只过某一 OS 课卷的卡" + R)
     print(bo + "│   " + R + Y + "ibox learn --due" + R + "              " + D + "只过该复习的卡" + R)
     print(bo + "│   " + R + Y + "ibox card check" + R + "                " + D + "卡库体检（分类 / 字段 / 重名）" + R)
     print(bo + "│   " + R + Y + "ibox card insert 文件" + R + "          " + D + "按分类自动归位加卡" + R)
+    print(bo + "│   " + R + Y + "ibox card sync" + R + "                " + D + "两份数据源对齐（防漂移）" + R)
     print(bo + "│" + R)
     print(bo + "│ " + R + D + "旧名 c / pycheat / tk / hi / gup 仍可用（内部转调本工具）" + R)
     if T.ollama_available():

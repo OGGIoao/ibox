@@ -6,7 +6,7 @@
 ## 1. 这是什么
 
 - **正式产品**：Personal Terminal Companion —— 用人话找到并安全使用终端命令；核心是 `pycheat` + 命令卡真源 `terminal-toolbox/cheatsheet.md`（详见 `docs/00-project/scope.md`）。
-- **用户面入口（2026-09-14 决策）**：收敛为**唯一入口 `ibox`**（`how` / `find` / `add` / `done` / `ask` / `hi` / `sync` + 开场使用指南）；旧名 `c` / `pycheat` / `tk` / `hi` / `gup` 保留为兼容壳。
+- **用户面入口（2026-09-14 决策）**：收敛为**唯一入口 `ibox`**（`how` / `find` / `add` / `done` / `ask` / `hi` / `sync` / `learn` / `card` + 开场使用指南）；旧名 `c` / `pycheat` / `tk` / `hi` / `gup` 保留为兼容壳。
   **该决策覆盖 ADR-001 的两条 Non-Goal**（「不重写 `hi` / `gup`」「不新增大型交互功能」）——`hi` / `gup` 已 Python 化进 `ibox hi` / `ibox sync`，Windows 从此可用。
 - **仓库其他内容**：OS / Shell 课程是解释层；`tk` 为 Beta（冻结扩域）；芯片架构与非终端放映是内容实验区（M0 不拆仓、不删除）。
 - 公开仓库：`https://github.com/OGGIoao/terminal-list`
@@ -16,10 +16,10 @@
 
 | 路径 | 内容 |
 |------|------|
-| `terminal-toolbox/ibox` | **统一入口**（2026-09-14 起）：`how` / `find` / `add` / `done` / `ask` / `hi` / `sync` + 开场使用指南 |
+| `terminal-toolbox/ibox` | **统一入口**（2026-09-14 起）：`how` / `find` / `add` / `done` / `ask` / `hi` / `sync` / `learn` / `card` + 开场使用指南 |
 | `terminal-toolbox/pycheat.py` | 命令卡引擎（检索 / 卡面渲染 / 交互浏览 / Windows UTF-8 输出），被 `ibox how` 复用 |
 | `terminal-toolbox/tk` + `tkcore.py` | 数据域层 + 共享引擎（note / log / gitx / clip / todo / explain / sum），被 `ibox` 复用 |
-| `terminal-toolbox/cheatsheet.md` | 数据源（知识真源），49 张卡（含 8 张 ollama 卡 + lsof） |
+| `terminal-toolbox/cheatsheet.md` | 数据源（知识真源），59 张卡，按 7 个功能域分区；每卡带「分类」（受控词表）与「课卷」字段 |
 | `terminal-toolbox/ibox.cmd` / `pycheat.cmd` / `tk.cmd` + `install.ps1` | Windows 入口与一键安装 |
 | `terminal-toolbox/ibox-使用说明.md` · `跨平台使用指南.md` · `tk-技术解读.md` | 工具箱文档 |
 | `docs/00-project/scope.md` · `specs/m0-acceptance.md` | 产品边界 / M0 验收规格 |
@@ -75,6 +75,8 @@
 - ⚠️ **不在公开仓库恢复 / 新增指向 iCloud 或其他私有路径的软链**（如 `AGENTS.md` → `iCloud/...`）。此前那份软链已移为 `.icloud.bak` 且不提交；本仓库现用自包含 `AGENTS.md` / `CLAUDE.md` / `STATUS.md` / `MEMORY.md`，已纳入 git。
 - 不复制 `cheatsheet.md` 内容进代码或文档做第二份维护（单一数据源纪律）。
 - ✅ **保持单入口**：新增能力请做成 `ibox` 的子命令，**不要再起新的顶层命令名**。用户面已从 5 个名字收敛到 1 个（`c`/`pycheat`/`tk`/`hi`/`gup` 各自为政就是反面教材）；用户明说「不想越来越臃肿」。
+- ✅ **加卡走注册机制**：新卡用 `ibox card insert <文件>`（按「分类」自动插进对应分区），**不要手工追加到文件末尾**。`分类` 必须在 7 个功能域词表内（硬件与系统信息 / 进程与资源 / 文件与磁盘 / Shell 与环境 / 版本控制 / 网络与远程 / AI 工具），`课卷` 为 `-` / `2` / `2,7` 形式；改完跑 `ibox card check` 复核。
+- ⚠️ **两份数据源必须对齐**：用户级 `~/.config/cheat/cheatsheet.md`（实际生效）与仓库版 `terminal-toolbox/cheatsheet.md`（出厂副本）是两份文件。手工 cp 已两次导致漂移（`lsof` 卡只进仓库、`pycheat→ibox` 改名只进仓库），请用 `ibox card sync` 而非手工复制。
 - git 安全：只 add 明确涉及的文件；**绝不 `git rm` / `git reset --hard`**；个人目录操作走 `gup` 红线（ff-only，不 rm）。
 - 自动化数据 `~/.workbuddy/workbuddy.db` 绝不用 `rm` / `sqlite3` / shell 删，只用自动化管理工具。
 - 改排序 / 语义逻辑前，先读 `MEMORY.md` §2 与 `pycheat.py` 的 `fused_rank` 实现，避免回归纯语义翻车。

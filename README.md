@@ -22,7 +22,7 @@
 
 | # | 工具 | 形态 | 一句话 |
 |---|------|------|--------|
-| ★ | **`ibox`** | Python CLI（`terminal-toolbox/ibox`，软链 `~/bin/ibox`；短名 `c`） | **统一入口**（2026-09-14 起）：`how` 查命令 · `find` 搜自己的数据 · `add` / `done` 记与完成任务 · `ask` 问本地模型 · `hi` 机器信息 · `sync` 一键 git 同步。直接敲 `ibox` 会打印完整使用指南 |
+| ★ | **`ibox`** | Python CLI（`terminal-toolbox/ibox`，软链 `~/bin/ibox`；短名 `c`） | **统一入口**（2026-09-14 起）：`how` 查命令 · `find` 搜自己的数据 · `add` / `done` 记与完成任务 · `ask` 问本地模型 · `hi` 机器信息 · `sync` 一键 git 同步 · `learn` 按功能域学习 · `card` 卡库注册与体检。直接敲 `ibox` 会打印完整使用指南 |
 | — | `pycheat`（`pycheat.py`） | Python CLI | 命令卡引擎（正式产品核心），现被 `ibox how` 复用；旧名 `pycheat` / `c` 仍可用 |
 | β | `tk`（`tk` + `tkcore.py`） | Python CLI | **Beta**：note / log / gitx / clip / todo / explain / sum，被 `ibox find` / `add` / `ask` 复用；旧名 `tk` 仍可用（ADR-001 要求冻结扩域，等待真实使用验证） |
 | — | `hi`（`hi.sh`） | shell 脚本 | 已被 `ibox hi` 取代（Python 版，Windows 也能用） |
