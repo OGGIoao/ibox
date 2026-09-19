@@ -61,4 +61,4 @@
 - 加卡走 `ibox card insert`（按「分类」自动归位），不要手工追加到文件末尾；改完跑 `ibox card check`。
 - git 安全：只 add 本任务涉及文件；绝不 `git rm` / `reset`；个人目录走 `gup` 红线（ff-only，不 rm）。
 - 自动化数据 `~/.workbuddy/workbuddy.db` 绝不用 `rm` / `sqlite3` / shell 删，只用自动化管理工具。
-- **已知坑与已修 bug 不在本文件复述** —— 唯一归档地是 `docs/02-engineering/pitfalls.md`（`P1`…`P17`，每条固定「症状 / 根因 / 修法 / 防回归」）。改核心逻辑前先扫相关条目；修完新坑**当场**补一条，不要在本文件或 `daily/` 里再写一份。
+- **已知坑与已修 bug 不在本文件复述** —— 唯一归档地是 `docs/02-engineering/pitfalls.md`（`Pn`，每条固定「症状 / 根因 / 修法 / 防回归」）。改核心逻辑前先扫相关条目；修完新坑**当场**补一条，不要在本文件或 `daily/` 里再写一份。

@@ -24,7 +24,7 @@
 | `terminal-toolbox/ibox-使用说明.md` · `跨平台使用指南.md` · `tk-技术解读.md` | 工具箱文档 |
 | `docs/00-project/scope.md` · `specs/m0-acceptance.md` | 产品边界 / M0 验收规格 |
 | `docs/01-design/decisions/` | ADR 决策记录（ADR-001 产品边界、ADR-002 入口收敛） |
-| `docs/02-engineering/pitfalls.md` | **踩坑库**：已知坑与已修 bug 的唯一归档地（编号 `P1`…`P17`，其他文件只引用不复述） |
+| `docs/02-engineering/pitfalls.md` | **踩坑库**：已知坑与已修 bug 的唯一归档地（编号 `Pn`，其他文件只引用不复述） |
 | `tests/` · `.github/workflows/ci.yml` · `scripts/check_html_links.py` | 测试与 CI 基线 |
 | `daily/` | 中立日记（人手写入口；`.workbuddy/memory/` 为 Agent 私有记忆） |
 | `README.md` | 人类蓝图 |
@@ -99,7 +99,7 @@
 
 ## 6. 红线（务必遵守）
 
-- ⚠️ **踩坑先查库、修完当场补**：所有已知坑与已修 bug 归档在 `docs/02-engineering/pitfalls.md`（编号 `P1`…`P17`）。改核心逻辑前先扫相关条目；修完新坑**当场**补一条（症状 / 根因 / 修法 / 防回归），别攒到「以后整理」。
+- ⚠️ **踩坑先查库、修完当场补**：所有已知坑与已修 bug 归档在 `docs/02-engineering/pitfalls.md`（编号 `Pn`）。改核心逻辑前先扫相关条目；修完新坑**当场**补一条（症状 / 根因 / 修法 / 防回归），别攒到「以后整理」。
 - ⚠️ **不在公开仓库恢复 / 新增指向 iCloud 或其他私有路径的软链**（如 `AGENTS.md` → `iCloud/...`）。此前那份软链已移为 `.icloud.bak` 且不提交；本仓库现用自包含 `AGENTS.md` / `CLAUDE.md` / `STATUS.md` / `MEMORY.md`，已纳入 git。
 - 不复制 `cheatsheet.md` 内容进代码或文档做第二份维护（单一数据源纪律）。
 - ✅ **保持单入口**：新增能力请做成 `ibox` 的子命令，**不要再起新的顶层命令名**。用户面已从 5 个名字收敛到 1 个（`c`/`pycheat`/`tk`/`hi`/`gup` 各自为政就是反面教材）；用户明说「不想越来越臃肿」。
