@@ -57,7 +57,9 @@ def resolve_sheet():
     preferred = os.path.expanduser("~/.config/cheat/cheatsheet.md")
     if os.path.isfile(preferred):
         return preferred
-    local = os.path.join(os.path.dirname(os.path.abspath(__file__)), "cheatsheet.md")
+    # 用 realpath：本脚本常经 ~/bin/pycheat 软链调用，abspath 会停在软链所在目录，
+    # 从而找不到同目录的出厂副本、首次初始化静默失败。
+    local = os.path.join(os.path.dirname(os.path.realpath(__file__)), "cheatsheet.md")
     if os.path.isfile(local):
         try:
             os.makedirs(os.path.dirname(preferred), exist_ok=True)

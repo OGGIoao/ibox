@@ -29,7 +29,9 @@ import socket
 import subprocess
 import sys
 
-HERE = os.path.dirname(os.path.abspath(__file__))
+# 必须用 realpath 而非 abspath：本脚本常经 ~/bin/ibox 软链调用，abspath 会停在软链
+# 所在目录（~/bin），导致同目录的 tk / cheatsheet.md 定位失败、并在 ~/bin 生成 __pycache__。
+HERE = os.path.dirname(os.path.realpath(__file__))
 if HERE not in sys.path:
     sys.path.insert(0, HERE)
 

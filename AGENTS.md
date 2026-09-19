@@ -76,7 +76,9 @@
 - 不复制 `cheatsheet.md` 内容进代码或文档做第二份维护（单一数据源纪律）。
 - ✅ **保持单入口**：新增能力请做成 `ibox` 的子命令，**不要再起新的顶层命令名**。用户面已从 5 个名字收敛到 1 个（`c`/`pycheat`/`tk`/`hi`/`gup` 各自为政就是反面教材）；用户明说「不想越来越臃肿」。
 - ✅ **加卡走注册机制**：新卡用 `ibox card insert <文件>`（按「分类」自动插进对应分区），**不要手工追加到文件末尾**。`分类` 必须在 7 个功能域词表内（硬件与系统信息 / 进程与资源 / 文件与磁盘 / Shell 与环境 / 版本控制 / 网络与远程 / AI 工具），`课卷` 为 `-` / `2` / `2,7` 形式；改完跑 `ibox card check` 复核。
-- ⚠️ **两份数据源必须对齐**：用户级 `~/.config/cheat/cheatsheet.md`（实际生效）与仓库版 `terminal-toolbox/cheatsheet.md`（出厂副本）是两份文件。手工 cp 已两次导致漂移（`lsof` 卡只进仓库、`pycheat→ibox` 改名只进仓库），请用 `ibox card sync` 而非手工复制。
+- ⚠️ **软链直指仓库，已无运行副本**（2026-09-19）：`~/bin/{ibox,tk,pycheat,gup,hi}` 直接指向本仓库 `terminal-toolbox/`；此前的 `~/terminal-toolbox/` 运行副本已退役为 `~/terminal-toolbox.retired-20260919`。改仓库即改运行行为，**不要再手工 `cp` 到任何第二份目录**（运行副本模式曾三次导致漂移）。
+- ⚠️ **两份数据源必须对齐**：用户级 `~/.config/cheat/cheatsheet.md`（实际生效）与仓库版 `terminal-toolbox/cheatsheet.md`（出厂副本）是两份文件，请用 `ibox card sync` 而非手工复制（手工 cp 曾两次导致漂移：`lsof` 卡只进仓库、`pycheat→ibox` 改名只进仓库）。
+- ⚠️ **脚本自身路径一律用 `os.path.realpath(__file__)`，禁止 `os.path.abspath(__file__)`**：工具经 `~/bin/*` 软链调用，`abspath` 会停在软链所在目录（`~/bin`）——导致同目录的 `tk` / `tkcore.py` / `cheatsheet.md` 定位失败、**新机器首次初始化静默失败**、并在 `~/bin` 写入 `__pycache__`。三处已于 2026-09-19 修复（`ibox:32`、`pycheat.py:60`、`tk:29`）；新增脚本沿用此约定，改动后务必在软链下调一次、并跑空 `HOME` 的首次初始化验证。
 - git 安全：只 add 明确涉及的文件；**绝不 `git rm` / `git reset --hard`**；个人目录操作走 `gup` 红线（ff-only，不 rm）。
 - 自动化数据 `~/.workbuddy/workbuddy.db` 绝不用 `rm` / `sqlite3` / shell 删，只用自动化管理工具。
 - 改排序 / 语义逻辑前，先读 `MEMORY.md` §2 与 `pycheat.py` 的 `fused_rank` 实现，避免回归纯语义翻车。

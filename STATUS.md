@@ -1,7 +1,7 @@
 # STATUS.md — Personal Terminal Companion 当前状态
 
 > 唯一当前态。更新进度、下一动作、阻塞时只改本文件。
-> 更新日期：2026-09-15
+> 更新日期：2026-09-19
 
 ## 当前主线
 
@@ -58,14 +58,23 @@
 - 新增测试 `tests/test_ibox_card.py`（5 项），全套 **11 项测试通过**。
 - 数据源 56 → 59 张（新增跨机互控三件套：`tailscale` / macOS 开启远程登录 / Windows 装 OpenSSH Server）。
 
+## 本批（2026-09-19）：消除运行副本 + 修复软链下的路径解析
+
+- **ollama 恢复运行**：此前服务未启动（无进程、11434 无响应），语义增强静默降级为纯离线。已用 `Ollama.app` 重启，`bge-m3` 生效，开场屏恢复显示「语义检索已启用」。
+- **软链直指仓库，运行副本退役**：`~/bin/{ibox,tk,pycheat,gup,hi}` 原指向 `~/terminal-toolbox/` 运行副本（靠手工 `cp` 与仓库同步，已三次漂移）；现直指本仓库，运行副本改名为 `~/terminal-toolbox.retired-20260919` 留作回退。至此「改仓库 → 立即生效」，漂移根因消除。
+- **修复软链下的脚本自身路径解析**（本次改造暴露的真实缺陷）：`ibox:32` / `pycheat.py:60` / `tk:29` 均用 `os.path.abspath(__file__)`，而软链调用时 `__file__` **保持软链路径、不 realpath**，三处一致改为 `os.path.realpath(__file__)`。此前「能用」依赖三个巧合同时成立（`sys.path[0]` 的 realpath 兜底、用户级数据源已存在、`tk` 恰好也是软链）——**新机器 clone 后首次使用会静默失败**，且在 `~/bin` 写入 `__pycache__`。
+- 验证：11 项测试通过；软链下 `ibox` / `tk` / `pycheat` 全部正常；**空 `HOME` + 软链调用的首次自动初始化（两条通道）成功**；`~/bin` 不再被写入缓存。
+- **已识别未处理**：`score_card` 对「文件」这类高频通用词区分度不足 —— `怎么把文件传到另一台机器` 首位是 `stat`（`scp` 第 2）、`强制结束没响应的程序` 首位是 `top/htop`（`kill` 第 2）。经三个历史版本对照确认为**既有缺陷、非本轮回归**，属精度问题而非故障。
+
 ## 下一动作
 
-1. **与老李的 M0 Review 对齐**：ibox 覆盖了 ADR-001 两条 Non-Goal，需确认 ADR-002 与 `scope.md` 同步，否则 M0 Exit Criteria 中「README / STATUS 与实际能力一致」会对不上。
+1. **与老李的 M0 Review 对齐**：ibox 覆盖了 ADR-001 两条 Non-Goal，ADR-002 与 `scope.md` 已同步，待他确认后 M0 Exit Criteria 中「README / STATUS 与实际能力一致」一项即可勾掉。
 2. 在真实 Windows PowerShell 环境验证 `install.ps1`、`ibox`（含翻页修复）与 `c` —— CI 不替代真人安装验收。
 3. 可选：拉 chat 模型 `ollama pull qwen2.5:0.5b`，让 `ibox ask` 立即可用。
 4. 可选：`ibox find` 目前一次只搜一个域（默认 note）；跨域聚合排序**未做**（成本不均：log 扫盘、git 读仓库）。
 5. 可选：给 `ibox` 加 zsh tab 补全与 ↑ 调历史（当前开场屏用裸 `input()`）。
 6. 可选：`ibox sync` 沿用原 `gup.sh` 的 `git add -A`（无差别暂存），与本仓库「只 add 明确涉及文件」的纪律不同 —— **风险已识别，行为未改**。
+7. 可选：提升 `score_card` 对「文件 / 进程」这类高频通用词的区分度（见本批「已识别未处理」）。改动前须读 `MEMORY.md` §2 与 `fused_rank` 实现，避免回归纯语义翻车。
 
 ## 阻塞 / 风险
 

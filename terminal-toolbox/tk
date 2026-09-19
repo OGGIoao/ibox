@@ -26,7 +26,8 @@ def _ensure_utf8_stdio():
 
 _ensure_utf8_stdio()
 
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+# 用 realpath：本脚本常经 ~/bin/tk 软链调用，abspath 会停在软链所在目录而找不到 tkcore.py
+sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
 import tkcore as T
 
 CONFIG_DIR = T.CONFIG_DIR
