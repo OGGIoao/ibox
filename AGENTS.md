@@ -24,6 +24,7 @@
 | `terminal-toolbox/ibox-使用说明.md` · `跨平台使用指南.md` · `tk-技术解读.md` | 工具箱文档 |
 | `docs/00-project/scope.md` · `specs/m0-acceptance.md` | 产品边界 / M0 验收规格 |
 | `docs/01-design/decisions/` | ADR 决策记录（ADR-001 产品边界、ADR-002 入口收敛） |
+| `docs/02-engineering/pitfalls.md` | **踩坑库**：已知坑与已修 bug 的唯一归档地（编号 `P1`…`P17`，其他文件只引用不复述） |
 | `tests/` · `.github/workflows/ci.yml` · `scripts/check_html_links.py` | 测试与 CI 基线 |
 | `daily/` | 中立日记（人手写入口；`.workbuddy/memory/` 为 Agent 私有记忆） |
 | `README.md` | 人类蓝图 |
@@ -64,24 +65,51 @@
 
 ## 5. 记忆写入协议（所有 Agent 统一）
 
-- 实质工作后：向 `daily/YYYY-MM-DD.md` append 简记（做了什么 / 结论 / 待办 / 踩坑）。
-- 当前态变化 → 更新 `STATUS.md`（唯一当前态，避免多处重复维护）。
-- 长期约定 / 偏好变化 → 原地更新 `MEMORY.md`（整体 ≤ 4000 字，纯 markdown）。
+**五处记录各司其职，不重复写正文**（同一条信息写两处必然漂移，见 `pitfalls.md` P4 / P5）：
+
+| 记什么 | 写在哪 |
+|---|---|
+| 今天做了什么、遇到什么 | `daily/YYYY-MM-DD.md`（append-only） |
+| 坑的详情（症状 / 根因 / 修法 / 防回归） | `docs/02-engineering/pitfalls.md` —— **唯一归档地** |
+| 现在在哪、下一步、阻塞 | `STATUS.md`（唯一当前态） |
+| 跨任务长期事实与约定 | `MEMORY.md`（整体 ≤ 4000 字） |
+| 重大决策「为什么这样定」 | `docs/01-design/decisions/ADR-*.md` |
+
+**`daily/` 固定四节**（两个 Agent 写法保持一致，便于比对与检索；此前 4 篇格式各异，无法横向查）：
+
+```markdown
+# YYYY-MM-DD
+
+## 做了什么
+-
+
+## 决策与理由
+- （重大决策另开 ADR，这里只留一句 + 链接）
+
+## 踩坑
+- 一句话现象 → 详见 `docs/02-engineering/pitfalls.md` P<n>
+
+## 待办 / 遗留
+-
+```
+
+- 长期约定 / 偏好变化 → 原地更新 `MEMORY.md`。
 - **禁止**写入 Agent 私有注入块（`<system-reminder>`、专用 YAML 指令块、`<!-- ... -->` 控制标记）。中枢文件必须纯 markdown，任何 Agent 与 Obsidian 都能无损读取。
 - 提交：先 `git status --short` 与 `git diff --check`，**只 add 本任务明确涉及的文件**；禁止 `git add -A`。一句结论式 commit message，让演进有历史、跨机可同步。
 
 ## 6. 红线（务必遵守）
 
+- ⚠️ **踩坑先查库、修完当场补**：所有已知坑与已修 bug 归档在 `docs/02-engineering/pitfalls.md`（编号 `P1`…`P17`）。改核心逻辑前先扫相关条目；修完新坑**当场**补一条（症状 / 根因 / 修法 / 防回归），别攒到「以后整理」。
 - ⚠️ **不在公开仓库恢复 / 新增指向 iCloud 或其他私有路径的软链**（如 `AGENTS.md` → `iCloud/...`）。此前那份软链已移为 `.icloud.bak` 且不提交；本仓库现用自包含 `AGENTS.md` / `CLAUDE.md` / `STATUS.md` / `MEMORY.md`，已纳入 git。
 - 不复制 `cheatsheet.md` 内容进代码或文档做第二份维护（单一数据源纪律）。
 - ✅ **保持单入口**：新增能力请做成 `ibox` 的子命令，**不要再起新的顶层命令名**。用户面已从 5 个名字收敛到 1 个（`c`/`pycheat`/`tk`/`hi`/`gup` 各自为政就是反面教材）；用户明说「不想越来越臃肿」。
 - ✅ **加卡走注册机制**：新卡用 `ibox card insert <文件>`（按「分类」自动插进对应分区），**不要手工追加到文件末尾**。`分类` 必须在 7 个功能域词表内（硬件与系统信息 / 进程与资源 / 文件与磁盘 / Shell 与环境 / 版本控制 / 网络与远程 / AI 工具），`课卷` 为 `-` / `2` / `2,7` 形式；改完跑 `ibox card check` 复核。
-- ⚠️ **软链直指仓库，已无运行副本**（2026-09-19）：`~/bin/{ibox,tk,pycheat,gup,hi}` 直接指向本仓库 `terminal-toolbox/`；此前的 `~/terminal-toolbox/` 运行副本已退役为 `~/terminal-toolbox.retired-20260919`。改仓库即改运行行为，**不要再手工 `cp` 到任何第二份目录**（运行副本模式曾三次导致漂移）。
-- ⚠️ **两份数据源必须对齐**：用户级 `~/.config/cheat/cheatsheet.md`（实际生效）与仓库版 `terminal-toolbox/cheatsheet.md`（出厂副本）是两份文件，请用 `ibox card sync` 而非手工复制（手工 cp 曾两次导致漂移：`lsof` 卡只进仓库、`pycheat→ibox` 改名只进仓库）。
-- ⚠️ **脚本自身路径一律用 `os.path.realpath(__file__)`，禁止 `os.path.abspath(__file__)`**：工具经 `~/bin/*` 软链调用，`abspath` 会停在软链所在目录（`~/bin`）——导致同目录的 `tk` / `tkcore.py` / `cheatsheet.md` 定位失败、**新机器首次初始化静默失败**、并在 `~/bin` 写入 `__pycache__`。三处已于 2026-09-19 修复（`ibox:32`、`pycheat.py:60`、`tk:29`）；新增脚本沿用此约定，改动后务必在软链下调一次、并跑空 `HOME` 的首次初始化验证。
+- ⚠️ **不再建第二份代码目录**（详见 P5）：`~/bin/{ibox,tk,pycheat,gup,hi}` 直指本仓库 `terminal-toolbox/`，运行副本已退役为 `~/terminal-toolbox.retired-20260919`。改仓库即改运行行为，不要再 `cp` 到任何第二处。
+- ⚠️ **两份数据源用 `ibox card sync` 对齐**（详见 P4）：用户级 `~/.config/cheat/cheatsheet.md`（实际生效）与仓库版 `terminal-toolbox/cheatsheet.md`（出厂副本），**不要手工 cp**。
+- ⚠️ **脚本自身路径用 `os.path.realpath(__file__)`，禁用 `abspath`**（详见 P7）：软链下 `abspath` 会得到 `~/bin`，导致同目录依赖定位失败、**新机器首次初始化静默失败**。改完务必在软链下调一次，并用空 `HOME` 跑一次首次初始化验证。
+- ⚠️ **改排序 / 语义逻辑前**先读 `MEMORY.md §2` 与 P1：铁律是「强本地命中压住语义」，**不要改回纯语义替换**。
 - git 安全：只 add 明确涉及的文件；**绝不 `git rm` / `git reset --hard`**；个人目录操作走 `gup` 红线（ff-only，不 rm）。
 - 自动化数据 `~/.workbuddy/workbuddy.db` 绝不用 `rm` / `sqlite3` / shell 删，只用自动化管理工具。
-- 改排序 / 语义逻辑前，先读 `MEMORY.md` §2 与 `pycheat.py` 的 `fused_rank` 实现，避免回归纯语义翻车。
 
 ## 7. 协作风格（用户偏好，2026-08-27/28 指定）
 

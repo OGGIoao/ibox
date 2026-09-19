@@ -40,7 +40,8 @@
 ## 4. 关键约定与硬伤
 
 - **ollama 语义检索**：默认 `nomic-embed-text`；本机已装 **bge-m3** 并被 `resolve_embed_model()` 自动优先（中文区分度约 nomic 的 6–7 倍）。向量缓存按「内容 hash + 模型名」存 `~/.config/cheat/.pycheat_vectors.json`，换模型自动失效重建。
-- **ollama 未运行时**语义增强会**静默降级**为纯离线（不报错，仅开场屏提示），近义 / 跨语言查询命中率下降 —— 排查检索异常时先确认 `:11434` 是否在跑。
+- **ollama 未运行时**语义增强会**静默降级**为纯离线（不报错，仅开场屏提示），近义 / 跨语言查询命中率下降 —— 排查检索异常时先确认 `:11434` 是否在跑（详见 P2）。
+- **本机 ollama 形态**：`/Applications/Ollama.app`（CLI 在 `/usr/local/bin/ollama`），**无** brew service、**无** LaunchAgent → 用 `open -a Ollama` 启动，常驻菜单栏、不依赖任何会话。
 - **零依赖**：只调标准库 `urllib` 调本机 `:11434`，不用 `requests` / `numpy`，避免污染环境（managed 隔离规矩）。
 - **称呼约定**（用户指定，2026-08-27）：AI 助手名 = 小o，用户自称 = 老Z（仅该会话有效；接手人不必沿用）。
 - **协作风格**（用户指定，2026-08-28）：先商量再动手——先给诊断 + 建议 + 带选项提问，让用户拍板关键分叉再实现。
@@ -60,4 +61,4 @@
 - 加卡走 `ibox card insert`（按「分类」自动归位），不要手工追加到文件末尾；改完跑 `ibox card check`。
 - git 安全：只 add 本任务涉及文件；绝不 `git rm` / `reset`；个人目录走 `gup` 红线（ff-only，不 rm）。
 - 自动化数据 `~/.workbuddy/workbuddy.db` 绝不用 `rm` / `sqlite3` / shell 删，只用自动化管理工具。
-- **已修真 bug（避免回归）**：① tk 的 id 秒级碰撞（uuid 后缀）② 源副本曾缺 `cheatsheet.md` 致 Windows 首次崩溃 ③ 向量缓存未记模型名误用旧向量 ④ `pycheat.py` / `tk` 的 `_ensure_utf8_stdio()`（Windows cp1252 中文崩溃）⑤ 软链下 `abspath` 导致首次初始化失败（改 realpath）。
+- **已知坑与已修 bug 不在本文件复述** —— 唯一归档地是 `docs/02-engineering/pitfalls.md`（`P1`…`P17`，每条固定「症状 / 根因 / 修法 / 防回归」）。改核心逻辑前先扫相关条目；修完新坑**当场**补一条，不要在本文件或 `daily/` 里再写一份。
