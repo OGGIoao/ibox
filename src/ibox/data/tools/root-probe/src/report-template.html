@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>根系探测器</title>
+  <style>
+    :root {
+      --bg: #0b0f20; --panel: #151d3a; --line: #2a3563; --text: #fff1e8; --muted: #c2c3c7;
+      --blue: #29adff; --yellow: #ffec27; --red: #ff004d; --peach: #ffccaa; --indigo: #83769c;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.7 "Microsoft YaHei", "PingFang SC", sans-serif; }
+    main { max-width: 980px; margin: 0 auto; padding: 24px 16px 64px; }
+    h1 { font-size: 22px; margin: 0 0 4px; color: var(--blue); }
+    h2 { font-size: 20px; margin: 40px 0 12px; padding-bottom: 6px; border-bottom: 2px solid var(--line); }
+    h3 { font-size: 17px; margin: 24px 0 8px; }
+    p { margin: 0 0 10px; }
+    a { color: var(--blue); }
+    code { font-family: Consolas, monospace; color: var(--yellow); font-size: 14px; word-break: break-all; }
+    .muted { color: var(--muted); }
+    .hero { display: grid; grid-template-columns: minmax(0, 420px) 1fr; gap: 24px; align-items: start; }
+    @media (max-width: 760px) { .hero { grid-template-columns: 1fr; } }
+    canvas { width: 100%; height: auto; image-rendering: pixelated; box-shadow: 0 12px 40px rgba(0,0,0,.6); }
+    .actions { display: flex; gap: 12px; flex-wrap: wrap; margin: 12px 0; }
+    button { font: inherit; font-weight: bold; padding: 6px 16px; border: 3px solid var(--muted); background: var(--panel); color: var(--text); cursor: pointer; }
+    button.primary { background: var(--yellow); color: #000; border-color: var(--yellow); }
+    .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin: 12px 0; }
+    .stat { background: var(--panel); padding: 10px 14px; border-left: 4px solid var(--line); }
+    .stat b { display: block; font-size: 26px; line-height: 1.2; }
+    .stat.red { border-color: var(--red); } .stat.yellow { border-color: var(--yellow); } .stat.blue { border-color: var(--blue); }
+    .chip { display: inline-block; padding: 0 8px; margin: 2px 4px 2px 0; font-size: 13px; border: 2px solid var(--line); white-space: nowrap; }
+    .chip.certain { border-color: var(--yellow); color: var(--yellow); }
+    .chip.likely { border-color: var(--blue); color: var(--blue); }
+    .chip.mismatch { border-color: var(--indigo); color: var(--peach); border-style: dashed; }
+    .chip.broken { border-color: var(--red); color: var(--red); }
+    .layer { background: var(--panel); padding: 4px 16px 12px; margin: 14px 0; border-left: 6px solid var(--line); }
+    .layer > summary { cursor: pointer; padding: 10px 0; font-weight: bold; font-size: 17px; }
+    .item { border-top: 1px solid var(--line); padding: 10px 0; }
+    .item .name { font-weight: bold; word-break: break-all; }
+    .item .meta { font-size: 14px; color: var(--muted); }
+    .explain { background: rgba(41,173,255,.08); border-left: 3px solid var(--blue); padding: 8px 12px; margin: 6px 0 10px; font-size: 15px; }
+    .fix { border-left: 4px solid var(--red); background: var(--panel); padding: 10px 14px; margin: 10px 0; }
+    .note { border-left: 4px solid var(--yellow); background: var(--panel); padding: 12px 16px; margin: 14px 0; }
+    ul { padding-left: 22px; margin: 6px 0; }
+    #how { display: none; } #how.open { display: block; }
+  </style>
+</head>
+<body>
+<main id="app"></main>
+<script>
+/*PROBE_JS*/
+</script>
+<script>
+(function () {
+  const data = /*PROBE_DATA*/;
+  const R = RootProbe;
+  const app = document.getElementById('app');
+  const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const date = (data.generatedAt || '').slice(0, 10);
+
+  let items, sum, title, subtitle, intro;
+  if (data.mode === 'compare') {
+    const snaps = data.snapshots;
+    const d = R.diffSnapshots(snaps[0], snaps[1], snaps[2]);
+    items = d.leftover ? R.asItems(d.leftover, true) : R.asItems(d.added, false);
+    sum = R.summarize(items);
+    title = d.leftover ? '卸载之后还剩什么' : '这段时间多了什么';
+    subtitle = snaps.map((s) => `「${s.label}」`).join(' → ');
+    intro = { d, snaps };
+  } else {
+    const att = R.attribute(data.records, data.keyword);
+    items = att.items;
+    sum = R.summarize(items);
+    title = data.keyword;
+    subtitle = sum.total ? `根扎到了第 ${sum.depth} 层${sum.deepest ? '：' + R.LAYERS[sum.deepest].name : ''}` : '没有找到它的根';
+    intro = { family: att.family };
+  }
+  let echo = R.echoLine(sum, title);
+  if (data.mode === 'compare') {
+    const d = intro.d;
+    if (d.leftover) {
+      echo = d.leftover.length
+        ? `装上时多长出了 ${d.added.length} 条根，卸载之后，还有 ${d.leftover.length} 条留在地里。`
+        : `卸载得很干净：装上时多长出的 ${d.added.length} 条根，全被拔掉了。`;
+    } else {
+      echo = d.added.length ? `这段时间里，电脑多长出了 ${d.added.length} 条根，少了 ${d.removed.length} 条。` : '这段时间里，地下什么也没变。';
+    }
+  }
+  document.title = `根系探测器｜${title}`;
+
+  // —— 顶部：根系图 + 概况 ——
+  let html = `<div class="hero"><div><canvas id="map"></canvas>
+    <div class="actions"><button class="primary" id="save">保存为图片</button><button id="toggle">这张图怎么看？</button></div></div><div>
+    <h1>根系探测器</h1>
+    <p class="muted">${esc(data.mode === 'compare' ? '快照对比' : '勘探')} · ${esc(date)} · ${esc((data.global || {}).os || '')}</p>
+    <div class="stats">
+      <div class="stat yellow"><b>${sum.total}</b>条根</div>
+      <div class="stat blue"><b>${sum.hooks}</b>个会自己醒来的钩子</div>
+      <div class="stat red"><b>${sum.broken}</b>条断根</div>
+      <div class="stat"><b>${sum.depth}</b>扎到第几层</div>
+    </div>
+    <p>${esc(echo)}</p>
+    <section id="how" class="note">
+      <p>每个软件是一座漂浮的小岛，它在电脑里留下的每一处痕迹是一条根，按扎在哪一层画在不同深度：</p>
+      <p><b>地表</b>：右键菜单、文件关联、快捷方式。<b>地层</b>：注册表、开机自启、服务、计划任务。<b>深层</b>：硬盘上的文件夹。<b>核心</b>：内核里的驱动。</p>
+      <p><span class="chip certain">黄色</span>已验证属于它（签名对得上，或在它的安装目录里）；<span class="chip likely">蓝色</span>名字对得上，但还没法验证；<span class="chip broken">红色断口</span>登记还在，指向的文件却已经不在了，这就是"没删干净"。</p>
+      <p>这个工具以只读方式检查系统。<a href="${R.ARTICLE}" target="_blank" rel="noopener">查看原理与源码拆解</a>。</p>
+    </section>`;
+
+  if (data.mode !== 'compare') {
+    if (intro.family.length) {
+      html += `<h3>认亲依据</h3><p class="muted">下面这些签名者拿得出硬证据：名字对得上「${esc(data.keyword)}」，或者签的是它的卸载程序，或者签名的文件就在它的安装目录里。</p><p>${intro.family.map((f) => `<span class="chip certain">${esc(f.signer)} × ${f.count}</span>`).join('')}</p>
+        <p class="muted">签名者是他们的东西，即使名字里没有「${esc(data.keyword)}」，也会被认作一家。只是名字像、签名却是别人的，不算。</p>`;
+    } else if (sum.total) {
+      html += `<h3>认亲依据</h3><p class="muted">没有找到签名有效的文件，下面的结果只按名字匹配，请逐条核对。</p>`;
+    }
+  } else {
+    const d = intro.d;
+    html += `<h3>对比了哪几张快照</h3><ul>${intro.snaps.map((s) => `<li>「${esc(s.label)}」 ${esc((s.takenAt || '').replace('T', ' ').slice(0, 16))}</li>`).join('')}</ul>
+      <p>新出现 <b>${d.added.length}</b> 处，消失 <b>${d.removed.length}</b> 处${d.leftover ? `；新出现的里面，卸载后还剩 <b style="color:var(--red)">${d.leftover.length}</b> 处，被清掉 ${d.cleaned.length} 处` : ''}。</p>`;
+  }
+  html += `</div></div>`;
+
+  // —— 全局检查 ——
+  const gl = data.global || {};
+  html += `<h2>每次都值得看一眼</h2>
+    <p>hosts 文件里有 <b>${gl.hostsEntries || 0}</b> 条生效的条目${gl.hostsEntries ? '，展开下方"横切"一层查看是否和这个软件有关' : '，是干净的'}。
+    系统代理：${gl.proxyEnabled ? `<b style="color:var(--red)">已开启（${esc(gl.proxyServer)}）</b>，如果你没有主动设置过，值得查一查是谁改的` : '未开启'}。</p>`;
+
+  // —— 分层清单 ——
+  html += `<h2>${data.mode === 'compare' ? '逐条看' : '它的根扎在哪里'}</h2>`;
+  if (!items.length) html += `<p class="muted">没有找到。</p>`;
+  ['surface', 'strata', 'deep', 'core', 'edge'].forEach((key) => {
+    const list = sum.byLayer[key];
+    if (!list.length) return;
+    const L = R.LAYERS[key];
+    const kinds = [...new Set(list.map((it) => it.kind))];
+    html += `<details class="layer" style="border-color:${L.band}" ${key !== 'deep' || list.length < 12 ? 'open' : ''}>
+      <summary>${L.name} · ${list.length} 条 <span class="muted" style="font-weight:normal">${esc(L.desc)}</span></summary>`;
+    kinds.forEach((kind) => {
+      const K = R.KINDS[kind];
+      const group = list.filter((it) => it.kind === kind);
+      html += `<h3>${esc(K.label)}（${group.length}）</h3><div class="explain">${esc(K.explain)}</div>`;
+      group.forEach((it) => {
+        const status = (it.residue ? '<span class="chip broken">卸载后残留</span>' : '')
+          + (it.broken ? '<span class="chip broken">断根：目标已不在</span>' : '');
+        const conf = { certain: '已验证', likely: '名字对得上', mismatch: '名字像，签名是别人' }[it.confidence];
+        const extra = it.extra || {};
+        const bits = [];
+        if (extra.display && extra.display !== it.name) bits.push(esc(extra.display));
+        if (extra.state) bits.push(`状态：${esc(extra.state)}${extra.startMode ? ' / ' + esc(extra.startMode) : ''}`);
+        if (extra.publisher) bits.push(`发布者：${esc(extra.publisher)}`);
+        if (it.sig) bits.push(esc(R.SIG_TEXT[it.sig] || it.sig) + (it.signer ? `：${esc(it.signer)}` : ''));
+        html += `<div class="item"><div class="name">${esc(it.name)}</div>
+          <div>${status}<span class="chip ${it.confidence}">${conf}</span><span class="meta">${esc(it.reason)}</span></div>
+          <div class="meta">登记在：<code>${esc(it.location)}</code></div>
+          ${it.target ? `<div class="meta">指向：<code>${esc(it.target)}</code></div>` : ''}
+          ${bits.length ? `<div class="meta">${bits.join(' · ')}</div>` : ''}</div>`;
+      });
+    });
+    html += `</details>`;
+  });
+
+  // —— 同名不同家 ——
+  if (sum.lookalikes.length) {
+    html += `<h2>名字像它，却不是它</h2>
+      <p class="muted">下面 ${sum.lookalikes.length} 处名字里也带着关键词，但签名属于别人，所以没有算作它的根。名字可以撞，也可以冒充，签名才是身份证。</p>`;
+    sum.lookalikes.forEach((it) => {
+      html += `<div class="item"><div class="name">${esc(it.name)} <span class="chip mismatch">${esc(R.KINDS[it.kind].label)}</span></div>
+        <div class="meta">${esc(it.reason)}</div>${it.target ? `<div class="meta">指向：<code>${esc(it.target)}</code></div>` : ''}</div>`;
+    });
+  }
+
+  // —— 修路清单 ——
+  const toFix = items.filter((it) => (it.broken || it.residue) && it.confidence !== 'mismatch');
+  html += `<h2>修路清单</h2>`;
+  if (!toFix.length) {
+    html += `<p>没有发现断根。${data.mode === 'compare' ? '' : '如果你打算卸载它，请先走"设置 → 应用"里的正规卸载，卸完再用这个工具查一遍。'}</p>`;
+  } else {
+    html += `<div class="note"><p><b>这个工具不会替你删任何东西。</b>下面是每一处断根的处理方法，由你自己决定、亲手去做。</p>
+      <ul><li>改注册表之前，先在注册表编辑器里右键那一项，选"导出"，存一份备份；</li>
+      <li>驱动和服务先禁用、重启、观察几天，确认没问题再删除；</li>
+      <li>认不出来的，不删；每处理一处，最好重启一次确认电脑正常。</li></ul></div>`;
+    const kinds = [...new Set(toFix.map((it) => it.kind))];
+    kinds.forEach((kind) => {
+      const K = R.KINDS[kind];
+      const group = toFix.filter((it) => it.kind === kind);
+      html += `<div class="fix"><p><b>${esc(K.label)} · ${group.length} 处</b></p><p>${esc(K.fix)}</p><ul>${group.map((it) => `<li>${esc(it.name)} <span class="muted">— <code>${esc(it.location)}</code></span></li>`).join('')}</ul></div>`;
+    });
+  }
+
+  // —— 没查到的地方 ——
+  html += `<h2>这次没有查到的地方</h2>
+    <p class="muted">为了不需要管理员权限、也不碰你的个人文件，下面这些位置没有检查。它们同样可能藏着足迹：</p>
+    <ul><li>杀毒软件的信任列表（需要管理员权限才能读取）</li>
+    <li>根证书、浏览器扩展、浏览器主页设置</li>
+    <li>防火墙规则</li>
+    <li>"文档"文件夹里的存档、临时文件夹里的安装包残骸</li>
+    <li>其他用户账户下的设置</li></ul>
+    <p class="muted">数字文明 · 根系探测器。只读，不联网，不上传。报告里的用户名和用户目录已经替换成占位符。</p>`;
+
+  app.innerHTML = html;
+
+  const canvas = document.getElementById('map');
+  R.drawRootMap(canvas, { title, subtitle, sum, echo, date });
+  document.getElementById('save').addEventListener('click', () => {
+    const a = document.createElement('a');
+    a.download = `根系探测器-${title}.png`;
+    a.href = canvas.toDataURL('image/png');
+    a.click();
+  });
+  document.getElementById('toggle').addEventListener('click', () => document.getElementById('how').classList.toggle('open'));
+})();
+</script>
+</body>
+</html>

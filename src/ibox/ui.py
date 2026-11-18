@@ -16,7 +16,76 @@ def _c(code):
 
 R, BOLD, DIM, BORD = _c(0), _c("1"), _c("2"), _c("90")
 CYAN, GREEN, YELLOW, MAG, RED, BLUE = (_c(x) for x in ("1;36", "1;32", "1;33", "1;35", "1;31", "1;34"))
+ACCENT = _c("33")
 W = 58
+
+
+def show_tools(tools, query):
+    title = f"可用工具 · {query}" if query else "可用工具"
+    print(f"\n{ACCENT}{title}{R}")
+    for number, command, name, purpose in tools:
+        print(f"  [{number}] {pad(name, 12)} {purpose}  {command}")
+    if not tools:
+        print("  没找到匹配的工具。")
+    print("  输编号打开，输关键词查找。/ 看全部，回车返回。")
+
+
+def show_home(version):
+    print(f"\n{ACCENT}   /\\{R}      iBox {version} · 灯下")
+    print(f"{ACCENT}  < _>{R}     屏幕底下藏着一个叫「灯下」的世界。")
+    print(f"{ACCENT}   \\/{R}      每点一下鼠标，就有一条路亮起。")
+    print("\n  查看这台电脑上的程序、软件记录和文件。")
+    print("\n  直接问「谁在用 3000？」或按回车选工具。")
+    print("  /tools 查看工具   /map 四层说明   /exit 退出")
+
+
+def show_layer_map(tool_labels):
+    print(f"""
+{ACCENT}灯下 · 四层地图{R}
+
+{ACCENT}地表{R}
+  桌面上，文件夹像浮岛，右键菜单是岛上的门。
+  {tool_labels["/file"]}（查看文件信息）
+
+{ACCENT}地层{R}
+  岛底扎着软件留下的根，后台程序也在这里运转。
+  {tool_labels["/roots"]}   {tool_labels["/port"]}
+
+{ACCENT}深层{R}
+  深海里一格格的记忆舱，装着文件和内存里的数据。
+  {tool_labels["/file"]}（核对文件内容）
+
+{ACCENT}核心{R}
+  最深处的光一下一下跳动，像处理器（CPU）在执行指令。
+
+  输入编号打开工具，直接回车返回输入区。""")
+
+
+def show_port_help():
+    print(f"\n{ACCENT}查端口{R}")
+    print("从下面任一位置找到程序等待连接时用的编号。")
+    print("  浏览器地址栏    http://localhost:3000/ 里的 3000")
+    print("  程序启动窗口    127.0.0.1:8080 里的 8080")
+    print("  报错或软件设置  「端口被占用」或「监听端口」旁的数字")
+    print("填数字或粘贴本机地址。直接回车返回。")
+
+
+def show_port_result(port, listeners):
+    print(f"\n{ACCENT}正在使用端口 {port} 的程序{R}")
+    for row in listeners:
+        name = row["name"] or "程序名未读到"
+        print(f"  {name}  ·  监听地址 {row['address']}  ·  进程编号 {row['pid']}")
+
+
+def show_port_evidence(listeners):
+    print(f"\n{ACCENT}查询详情{R}")
+    print("  监听地址       程序在哪里等待连接。")
+    print("  进程编号（PID）  Windows 给这次运行分配的编号。")
+    print("  程序文件位置   Windows 正在运行的程序文件存在哪儿。")
+    for row in listeners:
+        path = row["path"] or "这次无法读取，进程可能已退出或受权限限制。"
+        print(f"  {row['pid']}  {path}")
+    print("  查询来源  Get-NetTCPConnection / Get-Process")
 
 
 def pad(text, width):

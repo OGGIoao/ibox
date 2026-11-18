@@ -1,72 +1,88 @@
-# ibox
+# iBox · 灯下工具箱
 
-> 不用记命令名，说出想做的事就行。
+> 屏幕底下藏着一个叫「灯下」的世界。每点一下鼠标，就有一条路亮起。
 
-`ibox` 是给**不写代码的人**用的终端小帮手：
+iBox 把《数字文明》里能在自己电脑上使用的小工具放到同一个入口。你可以查端口由哪个程序占用、看看软件留下了什么记录，或者核对两份文件的内容。
 
-- **我想做件事，但不知道命令** → `ibox 端口被谁占用`，给你一张可信的命令卡：怎么敲、示例、容易踩的坑。
-- **AI 在我的终端里跑了条命令，我想看懂** → `ibox explain`（开发中，见路线图）。
+写给想弄明白自己电脑的人。打开工具时会解释该填什么，查完可以继续看结果依据。先用自己的电脑走一轮，逐步建立对它的理解。
 
-同一套「意图卡」分别写了 **macOS** 和 **Windows** 的做法：在哪个系统上用，就看到哪个系统的命令；按 `t` 可以看另一个系统怎么做。
+当前版本为 **0.3.7**，Windows 工具原型，仍在自行体验和修正。需要 Windows、Python 3.9+ 和系统自带的 Windows PowerShell 5.1。
 
-## 安装
+## 先看看能做什么
 
-暂时需要 Python 3.9+（之后会提供免安装的单文件版本）：
+| 工具 | 什么时候用 | 你会看到什么 |
+| --- | --- | --- |
+| 查端口 | 程序提示「端口被占用」，或想确认本地服务是否在等连接 | 监听地址、程序名、进程编号，以及能读取到的程序文件位置 |
+| 根系探测器 | 想知道某个软件在电脑里留下哪些记录 | 分层的软件足迹图，也可以保存、对比安装或卸载前后的快照 |
+| 文件精灵 | 想知道两份文件内容是否一致 | Windows 弹窗里的文件位置、大小、修改时间、SHA-256 内容指纹和比较结果 |
 
-```bash
+根系探测器的报告在浏览器打开。文件精灵使用 Windows 文件选择和检查弹窗。三件工具使用当前账号权限。
+
+## 第一次安装
+
+1. 确认装有 Python 3.9+。可以在 PowerShell 输入 `python --version` 查看版本，需要安装时见 [Python 官方下载](https://www.python.org/downloads/windows/)。
+2. [下载这个仓库的 ZIP](https://github.com/OGGIoao/ibox/archive/refs/heads/main.zip)，解压。在解压后的文件夹中应能看到 `README.md` 和 `pyproject.toml`。
+3. 在该文件夹的地址栏输入 `powershell` 并按回车，依次运行下面两条命令。
+
+```powershell
+python -m pip install --user .
+python -m ibox
+```
+
+如果已经安装 Git，也可以先下载源码。
+
+```powershell
 git clone https://github.com/OGGIoao/ibox.git
 cd ibox
-python -m pip install -e .
+python -m pip install --user .
+python -m ibox
 ```
 
-## 用法
+安装后可以尝试输入 `ibox` 启动。如果终端找不到这个命令，继续使用 `python -m ibox` 即可，排查方法在[使用说明](docs/guide.md#安装更新与卸载)。
 
-```bash
-ibox                        # 开场屏：直接输入想做的事
-ibox 哪个程序最占内存        # 查命令
-ibox how 磁盘还剩多少 -c     # 把最佳命令复制到剪贴板
-ibox how -l                 # 列出全部卡片
-ibox learn                  # 按分类学习（目录 + 进度）
-ibox learn 网络              # 过某一类
-ibox learn --due            # 只看该复习的
-ibox --platform mac 看CPU型号   # 看另一个系统的做法
+## 从哪里开始
+
+```text
+   /\      iBox 0.3.7 · 灯下
+  < _>     屏幕底下藏着一个叫「灯下」的世界。
+   \/      每点一下鼠标，就有一条路亮起。
+
+  查看这台电脑上的程序、软件记录和文件。
 ```
 
-浏览卡片时：`n` 下一张 · `p` 上一张 · `c` 复制命令 · `t` 切换平台 · `/` 重新搜索 · `q` 退出。
+在 iBox 中按 **回车** 打开工具列表。输入编号选工具，也可以输入「卸载」「指纹」这样的词筛选。工具用完会回到刚才的列表。
 
-装了 [Ollama](https://ollama.com) 并拉取嵌入模型（推荐 `ollama pull bge-m3`）时，会自动启用语义检索，近义说法也能命中；没装也完全可用。加 `--no-ai` 可强制只用离线检索。
+- `/map` 打开四层地图，每层一句介绍，下方列出能体验的工具。在地图里输编号打开，用完回到地图。
+- `/tools` 或 `/` 查看全部工具，`/tools 卸载` 可以直接筛选。
+- `/port 3000` 查询端口，也支持 `/port http://localhost:3000/`。
+- `/roots` 打开根系探测器，`/file` 打开文件精灵。
+- `/exit` 退出。列表或地图里直接回车，会返回输入区。
 
-## 自己加卡
+第一次体验可以先用 `/file` 比较一份文件和它的副本，再用 `/roots` 查一个熟悉的软件。查端口时可以从浏览器地址栏、程序启动窗口或报错中找到要填的数字。详细步骤见[使用说明](docs/guide.md)。
 
-`ibox card dir` 显示自定义卡目录。在那里放 `.md` 文件，格式与 [`src/ibox/data/cards/`](src/ibox/data/cards/) 里的内置卡相同；同 `id` 会覆盖内置卡。写完跑 `ibox card check` 检查格式。
+斜杠命令在 iBox 的 `>` 提示符后输入。在 PowerShell 里直接查端口，用 `ibox port 3000` 或 `python -m ibox port 3000`。
 
-```markdown
-# 我的分类
+## 文件保存在哪里
 
-## 查看端口被谁占用
-- id: port-owner
-- 别名: 端口占用,查端口,谁占了端口
-- 作用: 查看哪个程序占用了某个网络端口
+根系探测器默认把报告和快照存到当前用户的 `.config/ibox/tools/root-probe/records/`。进入工具后选 **3** 可以换到其他盘的文件夹，选 **4** 打开当前目录，删除用完的报告或快照。更改位置后，旧文件仍在原来的目录。
 
-### mac
-- 命令: lsof
-- 用法: `lsof -i :<端口>`
-- 示例: `lsof -i :3000`
-- 踩坑: 查不到时可能需要 sudo
+文件精灵查看和比较文件时在窗口显示结果。点击「另存检查结果」后，由你选择文本文件的保存位置。卸载 iBox 后，已保存的个人结果仍在原位置，可以自行整理。
 
-### win
-- 命令: Get-NetTCPConnection
-- 用法: `Get-NetTCPConnection -LocalPort <端口>`
-```
+报告会包含软件名和系统位置。分享前可以先检查内容。更多读写说明见[使用说明](docs/guide.md#结果和文件管理)。
 
-## 路线图
+## 数字文明与这个仓库
 
-| 阶段 | 内容 | 状态 |
-|---|---|---|
-| M1 | 新包结构、意图卡 + mac / win 双实现、统一检索引擎 | ✅ |
-| M2 | `ibox explain`：拆解 bash / PowerShell 命令，逐段说明并标注风险 | 计划中 |
-| M3 | macOS / Windows 免安装单文件版；接入 Claude Code hook，Agent 跑命令前自动解释 | 计划中 |
+iBox 是数字文明的公开工具产出仓库，保存工具代码、安装配置、使用说明和源码拆解。[数字文明仓库](https://github.com/OGGIoao/digital-civilization) 保存灯下的世界观和游戏、视频制作资料。个人系统学习文章继续服务作者自己的学习。
 
-## License
+目前部分工具来自数字文明原有的 `toys/`。两边代码的当前关系和后续整理建议见[仓库分工](docs/repository-roles.md)。游戏、视频会随实际制作逐步推进。
 
-MIT
+## 继续了解
+
+- [使用说明](docs/guide.md) 包含端口怎么找、软件记录怎么看、如何选择保存目录。
+- [开发与源码入口](docs/development.md) 介绍结构、验证命令和工具接入。
+- [命令卡](docs/command-cards.md) 保留已有的 Windows／macOS 命令查阅功能。
+- [当前进度](NOW.md) 记录正在体验和待验证的内容，[文档目录](docs/README.md) 可以找到阶段记录。
+
+遇到问题可以在 [Issues](https://github.com/OGGIoao/ibox/issues) 留下操作步骤、预期和实际结果。
+
+代码采用 [MIT](LICENSE)。移植工具的来源和灯下形象说明见 [NOTICE](NOTICE.md)。

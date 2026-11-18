@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>文件精灵</title>
+  <style>
+    :root { --bg: #0b0f20; --panel: #151d3a; --text: #fff1e8; --muted: #c2c3c7; --blue: #29adff; --yellow: #ffec27; }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.7 "Microsoft YaHei", "PingFang SC", sans-serif; }
+    main { min-height: 100vh; display: flex; flex-direction: column; align-items: center; gap: 16px; padding: 24px 16px 40px; }
+    canvas { max-width: 100%; height: auto !important; image-rendering: pixelated; box-shadow: 0 12px 40px rgba(0,0,0,.6); }
+    .actions { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+    button { font: inherit; font-weight: bold; padding: 8px 18px; border: 3px solid var(--muted); background: var(--panel); color: var(--text); cursor: pointer; }
+    button.primary { background: var(--yellow); color: #000; border-color: var(--yellow); }
+    button:hover { filter: brightness(1.1); }
+    #how { max-width: 600px; background: var(--panel); border-left: 4px solid var(--blue); padding: 14px 18px; display: none; }
+    #how.open { display: block; }
+    #how p { margin: 0 0 8px; }
+    code { font-family: Consolas, monospace; color: var(--yellow); }
+  </style>
+</head>
+<body>
+<main>
+  <canvas id="card"></canvas>
+  <div class="actions">
+    <button class="primary" id="save">保存为图片</button>
+    <button id="toggle">它是怎么来的？</button>
+  </div>
+  <section id="how">
+    <p>你在右键菜单里点了“召唤文件精灵”。Windows 在注册表里找到这一项登记的命令，把你右键的那个文件的路径填进命令里的 <code>%1</code>，再交给召唤程序。</p>
+    <p>召唤程序读出这个文件的 <strong>SHA-256 指纹</strong>：一串由文件里每一个字节算出来的数字。精灵的样子、名字和性格，全部由这串指纹决定。</p>
+    <p>文件没有被修改，也没有离开你的电脑。</p>
+  </section>
+</main>
+<script>
+/*SPIRIT_JS*/
+</script>
+<script>
+  const info = /*SPIRIT_DATA*/;
+  const spirit = FileSpirit.generate(info);
+  const canvas = document.getElementById('card');
+  document.title = `文件精灵｜${spirit.name}`;
+  const start = performance.now();
+  const frame = () => {
+    FileSpirit.drawCard(canvas, info, spirit, (performance.now() - start) / 1000);
+    requestAnimationFrame(frame);
+  };
+  frame();
+  document.getElementById('save').addEventListener('click', () => {
+    FileSpirit.drawCard(canvas, info, spirit, 0);
+    const link = document.createElement('a');
+    link.download = `文件精灵-${spirit.name}.png`;
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+  });
+  document.getElementById('toggle').addEventListener('click', () => document.getElementById('how').classList.toggle('open'));
+</script>
+</body>
+</html>

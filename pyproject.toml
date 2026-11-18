@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "ibox"
-version = "0.1.0"
-description = "说人话找终端命令，看懂 AI 在终端里干什么（macOS / Windows）"
+version = "0.3.7"
+description = "灯下工具箱，查 Windows 本机状态，探索文件和软件的运行原理"
 readme = "README.md"
 license = { text = "MIT" }
 requires-python = ">=3.9"
@@ -18,4 +18,4 @@ ibox = "ibox.cli:main"
 where = ["src"]
 
 [tool.setuptools.package-data]
-ibox = ["data/cards/*.md"]
+ibox = ["data/cards/*.md", "data/tools/*/src/*", "data/tools/LICENSE"]
