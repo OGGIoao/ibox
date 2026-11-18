@@ -42,4 +42,8 @@
 
 个人学习文章沿用数字文明 ADR-015 的本机存放安排。旧仓库后续目录调整建议见[仓库分工](../repository-roles.md)，具体迁移待老李确认。
 
-本次提交前在 Windows、Python 3.13.9 运行 28 项回归和 56 张内置卡校验，均通过。检查了公开文档的本地链接与包内 PowerShell 的 UTF-8 BOM。跨平台 CI 由 GitHub Actions 在推送后执行。
+本次提交前在 Windows、Python 3.13.9 运行 28 项回归和 56 张内置卡校验，均通过。检查了公开文档的本地链接与包内 PowerShell 的 UTF-8 BOM。从已提交源码的干净归档构建 wheel，在独立目录安装后验证版本、11 个工具文件，以及真实端口的进程编号与程序路径，均通过。
+
+Git 上传连接中断后，改用 GitHub 接口同步源码，并核对远程树与本地已验证树完全相同。首个公开提交为 [`23d31b8`](https://github.com/OGGIoao/ibox/commit/23d31b8f8e78c33cd59cac3b5b9e8667db5c33b0)，历史保持连续。本机旧 `explain` 草稿不属于本轮工具交付，保留在本地。
+
+[首次线上 CI](https://github.com/OGGIoao/ibox/actions/runs/44302681535) 的 Windows 与 macOS 检查通过。Linux 在安装 Python 前受阻，日志显示 `ubuntu-latest` 已切换到 Ubuntu 26.04，Python 3.9 无对应构建。2026-11-18 核对官方 [Python 版本清单](https://raw.githubusercontent.com/actions/python-versions/main/versions-manifest.json)，3.9.25 提供 Ubuntu 24.04 的 x64 构建，因此将既有 Linux 检查固定到 `ubuntu-24.04`，保留 Python 3.9 的兼容性验证。修正后的线上结果以该提交的 GitHub Actions 为准。
