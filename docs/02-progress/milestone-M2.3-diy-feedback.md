@@ -46,4 +46,6 @@
 
 Git 上传连接中断后，改用 GitHub 接口同步源码，并核对远程树与本地已验证树完全相同。首个公开提交为 [`23d31b8`](https://github.com/OGGIoao/ibox/commit/23d31b8f8e78c33cd59cac3b5b9e8667db5c33b0)，历史保持连续。本机旧 `explain` 草稿不属于本轮工具交付，保留在本地。
 
-[首次线上 CI](https://github.com/OGGIoao/ibox/actions/runs/44302681535) 的 Windows 与 macOS 检查通过。Linux 在安装 Python 前受阻，日志显示 `ubuntu-latest` 已切换到 Ubuntu 26.04，Python 3.9 无对应构建。2026-11-18 核对官方 [Python 版本清单](https://raw.githubusercontent.com/actions/python-versions/main/versions-manifest.json)，3.9.25 提供 Ubuntu 24.04 的 x64 构建，因此将既有 Linux 检查固定到 `ubuntu-24.04`，保留 Python 3.9 的兼容性验证。修正后的线上结果以该提交的 GitHub Actions 为准。
+[首次线上 CI](https://github.com/OGGIoao/ibox/actions/runs/44302681535) 的 Windows 与 macOS 检查通过。Linux 在安装 Python 前受阻，日志显示 `ubuntu-latest` 已切换到 Ubuntu 26.04，Python 3.9 无对应构建。2026-11-18 核对官方 [Python 版本清单](https://raw.githubusercontent.com/actions/python-versions/main/versions-manifest.json)，3.9.25 提供 Ubuntu 24.04 的 x64 构建，因此将既有 Linux 检查固定到 `ubuntu-24.04`，保留 Python 3.9 的兼容性验证。
+
+修正后的源码提交 `01724ec` 已通过 [Windows、macOS 与 Ubuntu 24.04 三组线上 CI](https://github.com/OGGIoao/ibox/actions/runs/44303100820)，包括安装、回归、命令卡校验和安装后命令冒烟检查。随后仅补记此验证结果，未再改动运行代码或工作流。Windows 原生窗口的人工操作仍按上方记录等待老李试玩，跨平台 CI 不代表三件 Windows 本机工具已支持 macOS 或 Linux。
