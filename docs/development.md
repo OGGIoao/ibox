@@ -13,7 +13,7 @@
 | [cards.py](../src/ibox/cards.py)、[search.py](../src/ibox/search.py) | 命令卡解析和检索 |
 | [tests](../tests) | 命令分发、真实回环监听、筛选返回、保存路径和卡片回归 |
 
-首页可以用一句话提问。工具列表和地图都能按编号打开工具，执行后由 `_diagnostics_home` 恢复来源视图。各工具的输入处理函数最终调用 `env.py` 中的系统查询或 `run_bundled_tool`。
+当前查卡路径为 `cmd_how` → `search.search` → `ui.browse`。Windows 交互首页由 `_diagnostics_home` 处理端口问法与工具导航，普通查卡尚未接入该循环。工具输入最终调用 `env.py` 中的系统查询或 `run_bundled_tool`，返回后恢复来源视图。
 
 ## 验证
 

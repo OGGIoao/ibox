@@ -4,7 +4,7 @@
 
 ## 产品定位
 
-`ibox` 是面向普通用户的 Windows 本机工具箱，用真实查询和小实验解释电脑机制。阶段边界以 [NOW.md](NOW.md) 链接的当前 Milestone 为准。
+产品定位以 [README.md](README.md) 为准。先做 Windows，按用户任务组织命令查阅与本机工具，帮助减少命令和参数的记忆负担。阶段边界以 [NOW.md](NOW.md) 链接的当前 Milestone 为准。
 
 工具目录和交互入口分别在 `ui.py` 与 `cli.py`，Windows 查询及随包工具的脚本调用集中在 `env.py`。卡片维护沿用下面的规则。
 

@@ -1,6 +1,8 @@
 # 使用说明
 
-先完成[README 的安装步骤](../README.md#第一次安装)，在 Windows PowerShell 输入 `ibox` 或 `python -m ibox`。
+先完成[README 的安装步骤](../README.md#第一次安装)。查命令可在 PowerShell 输入 `python -m ibox how --no-ai 磁盘还剩多少`，搜索与复制方式见[命令卡](command-cards.md)。
+
+下面说明当前版本的本机工具入口，运行 `ibox` 或 `python -m ibox` 后使用。查端口对应「网络与端口」，进程相关命令归入「程序与资源」；统一任务导航仍待实现。
 
 ## 选工具和返回
 

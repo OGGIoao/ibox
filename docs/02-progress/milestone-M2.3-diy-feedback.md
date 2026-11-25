@@ -16,6 +16,10 @@
 
 本机 28 项回归、56 张命令卡校验和报告脚本语法检查通过。此次整理沿用 M2.3 Review，新增功能和独立实验按各自记录处理。
 
+## 2026-11-25 首页定位对齐
+
+老李指出 README 沿用了旧的独立工具结构。本轮按终端伴侣与统一任务分类修正公开介绍，端口归网络、进程归程序与资源；同时明确 0.3.7 的查卡与工具菜单仍分开。具体用法各自在命令卡和使用说明维护，当前阶段保持 Review。
+
 ## 参考
 
 - 查询于 2026-11-15。文件窗选择 Windows PowerShell 5.1 可加载的 [WinForms Form](https://learn.microsoft.com/en-us/dotnet/api/system.windows.forms.form?view=netframework-4.8.1) 与 [SaveFileDialog](https://learn.microsoft.com/en-us/dotnet/api/system.windows.forms.savefiledialog?view=netframework-4.8.1)，从安装包内固定入口调用。
