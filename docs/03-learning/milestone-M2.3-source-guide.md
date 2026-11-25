@@ -13,6 +13,14 @@
 - 根系探测器从 `root_records_dir` 读取当前位置。更改后用 `set_root_records_dir` 保存路径设置，并把路径交给原有的报告或快照入口。清理通过资源管理器选文件。
 - 文件精灵用系统对话框选文件，调用 `Summon-FileSpirit.ps1 -InfoOnly` 获得文件信息和指纹。窗体字段为只读，另存按钮调用 `Export-Inspection` 生成文本。打开和对比没有输出文件。
 
+## 根系报告怎样生成
+
+从 [Probe.ps1](../../src/ibox/data/tools/root-probe/src/Probe.ps1) 进入，[Collect-Footprints.ps1](../../src/ibox/data/tools/root-probe/src/Collect-Footprints.ps1) 读取 Windows 登记与文件线索。[Render-Report.ps1](../../src/ibox/data/tools/root-probe/src/Render-Report.ps1) 将结果写入用户选择的报告目录。
+
+报告中的 [probe.js](../../src/ibox/data/tools/root-probe/src/probe.js) 根据名称、路径和签名等线索归类，`diffSnapshots` 比较快照，`drawRootMap` 绘制根系图。报告只描述扫描范围内的观察，归属判断与实际存在的记录需要分别核对。
+
+操作入口与结果解释见[根系探测器使用说明](../guide.md#根系探测器)。当前脚本与本文在 iBox 一起维护。
+
 ## Key Files
 
 - `cli.py` 的 `_parse_guided_port`、`_guided_root_probe` 和 `_guided_file_spirit`。

@@ -40,8 +40,8 @@ PowerShell 文件采用 UTF-8 BOM。运行文件相对位置写在 `env.py` 的�
 
 ## 现有工具的维护
 
-根系探测器和早期像素文件精灵起源于数字文明的 `toys/`。当前安装包提供一份完整运行副本，其中 `Inspect-File.ps1` 是 iBox 新增的原生文件检查窗。发布行为以本仓库的代码和验证为准。记录见 [NOTICE](../NOTICE.md)。
+根系探测器和早期像素文件精灵起源于数字文明，当前源码以本仓库 `src/ibox/data/tools/` 为唯一维护位置，`Inspect-File.ps1` 提供原生文件检查窗。历史来源见 [NOTICE](../NOTICE.md)。
 
 修复公共脚本时，核对旧工具的调用方式。例如根系脚本的 `RecordsDir` 在 iBox 里指向用户选择的位置，单独运行时仍有原来的默认值；`Summon-FileSpirit.ps1 -InfoOnly` 供原生窗取得指纹，原有 HTML 卡片入口仍在脚本中。
 
-旧仓库与当前运行副本存在同步成本，后续目录迁移建议见[仓库分工](repository-roles.md)。每件工具的文档和测试随相应代码维护。
+旧工具已归档，跨仓职责见[仓库分工](repository-roles.md)。

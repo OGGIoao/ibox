@@ -14,7 +14,7 @@
     blue: '#29ADFF', indigo: '#83769C', pink: '#FF77A8', peach: '#FFCCAA'
   };
 
-  const ARTICLE = 'https://github.com/OGGIoao/digital-civilization/blob/main/toys/s2e01-root-probe/%E6%8B%86%E8%A7%A3.md';
+  const ARTICLE = 'https://github.com/OGGIoao/ibox/blob/main/docs/03-learning/milestone-M2.3-source-guide.md#根系报告怎样生成';
 
   // 四层深度 + 横切的高危痕迹。depth 越大，根扎得越深。
   const LAYERS = {

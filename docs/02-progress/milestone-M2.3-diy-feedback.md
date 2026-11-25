@@ -10,6 +10,12 @@
 | Technical Boundary | 沿用 iBox 与 Windows PowerShell。终端负责引导，使用 Windows 系统对话框完成文件选择和按需另存。保存位置单独记录，已有报告可回原目录查看。 |
 | Exit Criteria | 实测本机地址输入、颜色与无色输出、非默认目录和打开目录、原生窗与文件对比、另存路径及原文件保持原样。 |
 
+## 2026-11-25 仓库整理
+
+老李授权整理并同步两个仓库，确认数字文明保持私有。旧工具与对应 CI 已在数字文明归档，当前工具代码统一在 iBox 维护，职责见[仓库分工](../repository-roles.md)。报告内的源码说明改为本仓库公开文档，首页说明 Windows 优先与独立安装入口。
+
+本机 28 项回归、56 张命令卡校验和报告脚本语法检查通过。此次整理沿用 M2.3 Review，新增功能和独立实验按各自记录处理。
+
 ## 参考
 
 - 查询于 2026-11-15。文件窗选择 Windows PowerShell 5.1 可加载的 [WinForms Form](https://learn.microsoft.com/en-us/dotnet/api/system.windows.forms.form?view=netframework-4.8.1) 与 [SaveFileDialog](https://learn.microsoft.com/en-us/dotnet/api/system.windows.forms.savefiledialog?view=netframework-4.8.1)，从安装包内固定入口调用。

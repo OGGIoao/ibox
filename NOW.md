@@ -6,6 +6,7 @@
 
 ## 正在做什么
 
+- 仓库分工与旧工具归档已整理，验证见[本阶段记录](docs/02-progress/milestone-M2.3-diy-feedback.md#2026-11-25-仓库整理)。
 - iBox 0.3.7 已安装到本机，工具代码与公开说明已同步到 GitHub `main`。新访客从 [使用说明](docs/guide.md) 开始，工程入口与旧仓库整理建议见[开发指南](docs/development.md)和[仓库分工](docs/repository-roles.md)。本机测试及干净源码的安装包验证通过，线上验证见[本阶段记录](docs/02-progress/milestone-M2.3-diy-feedback.md#2026-11-18-公开同步)。
 
 ## 为什么做
